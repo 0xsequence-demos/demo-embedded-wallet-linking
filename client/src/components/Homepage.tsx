@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react'
 import { Connected } from './Connected'
 
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL!
+
 export const Homepage = () => {
   const { theme } = useTheme()
   const [ verifiedWaaSAddress, setVerifiedWaaSAddress ] = useState<string>()
@@ -31,7 +33,7 @@ export const Homepage = () => {
         return
     }
 
-    const response = await fetch('http://localhost:8787/verifyNonce', {
+    const response = await fetch(`${SERVER_URL}/verifyNonce`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
