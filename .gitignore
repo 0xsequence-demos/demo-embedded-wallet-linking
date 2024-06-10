@@ -1,0 +1,7 @@
+.wrangler
+node_modules
+wrangler.toml
+.DS_Store
+dist
+*.local
+.vscode

@@ -1,0 +1,12 @@
+name = "demo-waas-wallet-link-server"
+main = "src/index.ts"
+compatibility_date = "2024-02-08"
+
+node_compat = true # add this line
+
+# Variable bindings. These are arbitrary, plaintext strings (similar to environment variables)
+# Note: Use secrets to store sensitive data.
+# Docs: https://developers.cloudflare.com/workers/platform/environment-variables
+
+[vars]
+PROJECT_ACCESS_KEY = ""
