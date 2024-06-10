@@ -26,6 +26,7 @@ jobs:
       - name: Build
         env:
           VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+        working-directory: ./client
         run: pnpm build
 
       - name: Push
@@ -33,6 +34,6 @@ jobs:
         env:
           REPO: self
           BRANCH: build
-          FOLDER: dist
+          FOLDER: client/dist
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: 'Build: ({sha}) {msg}'
