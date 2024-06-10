@@ -4,6 +4,7 @@ import { URL } from "url";
 
 export interface Env {
     PROJECT_ACCESS_KEY: string;
+    VERIFICATION_URL: string;
     demo_waas_wallet_link_server_db: KVNamespace;
 }
 
@@ -55,7 +56,7 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext) 
 
         return new Response(JSON.stringify({
             nonce: nonce,
-            verificationUrl: `${url.origin}/verifyNonce`
+            verificationUrl: env.VERIFICATION_URL
         }), {
             headers: {
                 "Content-Type": "application/json",
