@@ -1,5 +1,6 @@
 import { ethers } from 'ethers'
 import { sequence } from "0xsequence"
+import { URL } from "url";
 
 export interface Env {
     PROJECT_ACCESS_KEY: string;
@@ -35,7 +36,9 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext) 
         });
     }
 
-    if (request.url === "/generateNonce") {
+    let url = new URL(request.url)
+
+    if (url.pathname === "/generateNonce") {
         const payload = await request.json()
         const { walletAddress }: any = payload
 
@@ -50,14 +53,17 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext) 
 
         await env.demo_waas_wallet_link_server_db.put(nonce, walletAddress)
 
-        return new Response(JSON.stringify({ nonce }), {
+        return new Response(JSON.stringify({
+            nonce: nonce,
+            verificationUrl: `${url.origin}/verifyNonce`
+        }), {
             headers: {
                 "Content-Type": "application/json",
             },
         });
     }
 
-    if (request.url === "/validateNonce") {
+    if (url.pathname === "/verifyNonce") {
         const payload = await request.json()
         const { nonce, signature, sessionId, chainId }: any = payload
 
@@ -118,7 +124,7 @@ export default {
 
         // Set CORS headers
         response.headers.set("Access-Control-Allow-Origin", "*");
-        response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.headers.set("Access-Control-Allow-Methods", "POST, OPTIONS");
         response.headers.set("Access-Control-Allow-Headers", "Content-Type");
 
         // return response
