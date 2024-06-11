@@ -7,14 +7,15 @@ import {
 } from "@0xsequence/indexer";
 import React, {useEffect, useState} from "react";
 import {ContentModal} from "../components/ContentModal/ContentModal";
-import {allNetworks} from "@0xsequence/network";
-import {useWriteContract} from "wagmi";
+import {NetworkConfig, allNetworks} from "@0xsequence/network";
+import {useSwitchChain, useWriteContract} from "wagmi";
 import {ERC1155_ABI, ERC721_ABI} from "../constants/abi";
 import {CollectibleSelectButton} from "../components/CollectibleSelectButton/CollectibleSelectButton";
+import {NetworkSwitch} from "../components/NetworkSwitch/NetworkSwitch";
 
 const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY;
 export const TransferCollectibleModal = ({
-  chainId,
+  chainId: chainIdFromProps,
   eoaWalletAddress,
   embeddedWalletAddress,
   onClose
@@ -24,6 +25,7 @@ export const TransferCollectibleModal = ({
   embeddedWalletAddress: `0x${string}` | undefined;
   onClose: () => void;
 }) => {
+  const [chainId, setChainId] = useState<number>(chainIdFromProps);
   const [selectedToken, setSelectedToken] = useState<TokenBalance | null>(null);
   const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
   const network = allNetworks.find((n) => n.chainId === chainId);
@@ -35,12 +37,13 @@ export const TransferCollectibleModal = ({
   const {writeContract, isPending: isWriteContractPending} = useWriteContract();
   const isPending = isWriteContractPending;
   const [isLoading, setIsLoading] = useState(false);
+  const {switchChain} = useSwitchChain();
 
   useEffect(() => {
-    if (eoaWalletAddress) {
+    if (eoaWalletAddress && chainId) {
       fetchTokenBalances();
     }
-  }, [embeddedWalletAddress]);
+  }, [embeddedWalletAddress, chainId]);
 
   const fetchTokenBalances = async () => {
     if (!network || !eoaWalletAddress) {
@@ -70,6 +73,9 @@ export const TransferCollectibleModal = ({
         }
         setTokenBalances(balances);
         setSelectedToken(balances[0]);
+      } else {
+        setTokenBalances([]);
+        setSelectedToken(null);
       }
     } catch (error) {
       console.error(error);
@@ -114,6 +120,16 @@ export const TransferCollectibleModal = ({
           <Text as="h1" variant="normal" fontWeight="medium" color="text100">
             Transfer Collectible
           </Text>
+
+          <NetworkSwitch
+            defaultChainId={chainId}
+            onNetworkChange={(network: NetworkConfig) => {
+              setChainId(network.chainId);
+              switchChain({
+                chainId: network.chainId
+              });
+            }}
+          />
 
           {isLoading ? (
             <Box alignItems="center" justifyContent="center">
