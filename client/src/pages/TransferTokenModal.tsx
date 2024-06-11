@@ -2,18 +2,19 @@ import {Box, Button, Spinner, Text, TextInput} from "@0xsequence/design-system";
 import {GetEtherBalanceArgs, SequenceIndexer, TokenBalance} from "@0xsequence/indexer";
 import React, {useEffect, useState} from "react";
 import {ContentModal} from "../components/ContentModal/ContentModal";
-import {allNetworks} from "@0xsequence/network";
+import {NetworkConfig, allNetworks} from "@0xsequence/network";
 import {ethers} from "ethers";
-import {useSendTransaction, useWriteContract} from "wagmi";
+import {useSendTransaction, useSwitchChain, useWriteContract} from "wagmi";
 import {parseEther} from "viem";
 import {getNativeTokenInfo} from "../constants/nativeToken";
 import {ERC20_ABI} from "../constants/abi";
 import {NativeTokenSelectButton} from "../components/NativeTokenSelectButton/NativeTokenSelectButton";
 import {TokenSelectButton} from "../components/TokenSelectButton/TokenSelectButton";
+import {NetworkSwitch} from "../components/NetworkSwitch/NetworkSwitch";
 
 const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY;
 export const TransferTokenModal = ({
-  chainId,
+  chainId: chainIdFromProps,
   eoaWalletAddress,
   embeddedWalletAddress,
   onClose
@@ -23,6 +24,7 @@ export const TransferTokenModal = ({
   embeddedWalletAddress: `0x${string}` | undefined;
   onClose: () => void;
 }) => {
+  const [chainId, setChainId] = useState<number>(chainIdFromProps);
   const [nativeTokenBalance, setNativeTokenBalance] = useState<ethers.BigNumber>();
   const [selectedToken, setSelectedToken] = useState<TokenBalance | null>(null);
   const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
@@ -33,16 +35,17 @@ export const TransferTokenModal = ({
     "https://" + network?.name + "-indexer.sequence.app",
     PROJECT_ACCESS_KEY
   );
+  const {switchChain} = useSwitchChain();
   const {sendTransaction, isPending: isNativeTransferPending} = useSendTransaction();
   const {writeContract, isPending: isWriteContractPending} = useWriteContract();
   const isPending = isNativeTransferPending || isWriteContractPending;
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (eoaWalletAddress) {
+    if (eoaWalletAddress && chainId) {
       fetchTokenBalances();
     }
-  }, [embeddedWalletAddress]);
+  }, [embeddedWalletAddress, chainId]);
 
   const fetchTokenBalances = async () => {
     if (!network || !eoaWalletAddress) {
@@ -66,6 +69,8 @@ export const TransferTokenModal = ({
           (balance) => balance.contractType === "ERC20"
         );
         setTokenBalances(filteredBalances);
+      } else {
+        setTokenBalances([]);
       }
     } catch (error) {
       console.error(error);
@@ -105,77 +110,91 @@ export const TransferTokenModal = ({
             Transfer Token
           </Text>
 
+          <NetworkSwitch
+            defaultChainId={chainId}
+            onNetworkChange={(network: NetworkConfig) => {
+              setChainId(network.chainId);
+              switchChain({
+                chainId: network.chainId
+              });
+            }}
+          />
+
           {isLoading ? (
             <Box alignItems="center" justifyContent="center">
               <Spinner />
             </Box>
           ) : (
             <>
-              {tokenBalances && tokenBalances.length > 0 && (
-                <>
-                  <Box
-                    overflow="auto"
-                    style={{
-                      maxHeight: "200px"
-                    }}>
-                    <Box flexDirection="column" gap="2">
-                      <NativeTokenSelectButton
-                        token={getNativeTokenInfo(chainId)!}
-                        selected={isNativeTokenSelected}
-                        handleSelectCoin={() => {
-                          setIsNativeTokenSelected(true);
-                          setSelectedToken(null);
-                        }}
-                        nativeTokenBalance={nativeTokenBalance!}
-                        chainId={chainId}
-                      />
-                      {tokenBalances.map((token) => (
-                        <TokenSelectButton
-                          token={token}
-                          selected={selectedToken === token}
-                          handleSelectCoin={() => {
-                            setIsNativeTokenSelected(false);
-                            setSelectedToken(token);
-                          }}
-                        />
-                      ))}
-                    </Box>
+              <>
+                <Box
+                  overflow="auto"
+                  style={{
+                    maxHeight: "200px"
+                  }}>
+                  <Box flexDirection="column" gap="2">
+                    <NativeTokenSelectButton
+                      token={getNativeTokenInfo(chainId)!}
+                      selected={isNativeTokenSelected}
+                      handleSelectCoin={() => {
+                        setIsNativeTokenSelected(true);
+                        setSelectedToken(null);
+                      }}
+                      nativeTokenBalance={nativeTokenBalance!}
+                      chainId={chainId}
+                    />
+
+                    {tokenBalances && tokenBalances.length > 0 && (
+                      <>
+                        {tokenBalances.map((token) => (
+                          <TokenSelectButton
+                            key={token.contractAddress}
+                            token={token}
+                            selected={selectedToken === token}
+                            handleSelectCoin={() => {
+                              setIsNativeTokenSelected(false);
+                              setSelectedToken(token);
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
                   </Box>
+                </Box>
 
-                  <TextInput
-                    readOnly
-                    value={embeddedWalletAddress}
-                    label="From"
-                    labelLocation="left"
-                  />
+                <TextInput
+                  readOnly
+                  value={embeddedWalletAddress}
+                  label="From"
+                  labelLocation="left"
+                />
 
-                  <TextInput
-                    readOnly
-                    value={eoaWalletAddress}
-                    label="To"
-                    labelLocation="left"
-                  />
+                <TextInput
+                  readOnly
+                  value={eoaWalletAddress}
+                  label="To"
+                  labelLocation="left"
+                />
 
-                  <TextInput
-                    type="number"
-                    value={amount}
-                    label="Amount"
-                    labelLocation="left"
-                    onChange={(e: any) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
+                <TextInput
+                  type="number"
+                  value={amount}
+                  label="Amount"
+                  labelLocation="left"
+                  onChange={(e: any) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
+                />
 
-                  <Button
-                    marginLeft="auto"
-                    onClick={sendTransactionHandler}
-                    variant="primary"
-                    shape="square"
-                    leftIcon={isPending ? () => <Spinner /> : undefined}
-                    label="Send Transaction"
-                    disabled={isPending || amount === ""}
-                  />
-                </>
-              )}
+                <Button
+                  marginLeft="auto"
+                  onClick={sendTransactionHandler}
+                  variant="primary"
+                  shape="square"
+                  leftIcon={isPending ? () => <Spinner /> : undefined}
+                  label="Send Transaction"
+                  disabled={isPending || amount === ""}
+                />
+              </>
             </>
           )}
         </Box>
