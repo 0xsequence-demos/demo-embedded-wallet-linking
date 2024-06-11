@@ -62,7 +62,10 @@ export const TransferTokenModal = ({
       setNativeTokenBalance(ethers.BigNumber.from(nativeTokenBalance.balance.balanceWei));
 
       if (tokenBalances && tokenBalances.balances && tokenBalances.balances.length > 0) {
-        setTokenBalances(tokenBalances.balances);
+        const filteredBalances = tokenBalances.balances.filter(
+          (balance) => balance.contractType === "ERC20"
+        );
+        setTokenBalances(filteredBalances);
       }
     } catch (error) {
       console.error(error);
