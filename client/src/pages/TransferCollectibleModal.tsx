@@ -121,7 +121,7 @@ export const TransferCollectibleModal = ({
             </Box>
           ) : (
             <>
-              {tokenBalances && tokenBalances.length > 0 && (
+              {tokenBalances && tokenBalances.length > 0 ? (
                 <>
                   <Box
                     overflow="auto"
@@ -131,6 +131,7 @@ export const TransferCollectibleModal = ({
                     <Box flexDirection="column" gap="2">
                       {tokenBalances.map((token) => (
                         <CollectibleSelectButton
+                          key={token.tokenID}
                           token={token}
                           selected={selectedToken === token}
                           handleSelectCoin={() => {
@@ -181,6 +182,10 @@ export const TransferCollectibleModal = ({
                     }
                   />
                 </>
+              ) : (
+                <Text variant="normal" fontWeight="medium" color="text50">
+                  No collectibles found in this wallet.
+                </Text>
               )}
             </>
           )}

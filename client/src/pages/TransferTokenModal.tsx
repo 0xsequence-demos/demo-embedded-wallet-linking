@@ -111,7 +111,7 @@ export const TransferTokenModal = ({
             </Box>
           ) : (
             <>
-              {tokenBalances && tokenBalances.length > 0 && (
+              {tokenBalances && tokenBalances.length > 0 ? (
                 <>
                   <Box
                     overflow="auto"
@@ -131,6 +131,7 @@ export const TransferTokenModal = ({
                       />
                       {tokenBalances.map((token) => (
                         <TokenSelectButton
+                          key={token.contractAddress}
                           token={token}
                           selected={selectedToken === token}
                           handleSelectCoin={() => {
@@ -175,6 +176,10 @@ export const TransferTokenModal = ({
                     disabled={isPending || amount === ""}
                   />
                 </>
+              ) : (
+                <Text variant="normal" fontWeight="medium" color="text50">
+                  No tokens available in this wallet.
+                </Text>
               )}
             </>
           )}
