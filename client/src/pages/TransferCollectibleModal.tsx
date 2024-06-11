@@ -1,18 +1,19 @@
 import {Box, Button, Spinner, Text, TextInput} from "@0xsequence/design-system";
-import {GetEtherBalanceArgs, SequenceIndexer, TokenBalance} from "@0xsequence/indexer";
+import {
+  ContractType,
+  GetEtherBalanceArgs,
+  SequenceIndexer,
+  TokenBalance
+} from "@0xsequence/indexer";
 import React, {useEffect, useState} from "react";
 import {ContentModal} from "../components/ContentModal/ContentModal";
 import {allNetworks} from "@0xsequence/network";
-import {ethers} from "ethers";
-import {useSendTransaction, useWriteContract} from "wagmi";
-import {parseEther} from "viem";
-import {getNativeTokenInfo} from "../constants/nativeToken";
-import {ERC20_ABI} from "../constants/abi";
-import {NativeTokenSelectButton} from "../components/NativeTokenSelectButton/NativeTokenSelectButton";
-import {TokenSelectButton} from "../components/TokenSelectButton/TokenSelectButton";
+import {useWriteContract} from "wagmi";
+import {ERC1155_ABI, ERC721_ABI} from "../constants/abi";
+import {CollectibleSelectButton} from "../components/CollectibleSelectButton/CollectibleSelectButton";
 
 const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY;
-export const TransferTokenModal = ({
+export const TransferCollectibleModal = ({
   chainId,
   eoaWalletAddress,
   embeddedWalletAddress,
@@ -23,19 +24,16 @@ export const TransferTokenModal = ({
   embeddedWalletAddress: `0x${string}` | undefined;
   onClose: () => void;
 }) => {
-  const [nativeTokenBalance, setNativeTokenBalance] = useState<ethers.BigNumber>();
   const [selectedToken, setSelectedToken] = useState<TokenBalance | null>(null);
   const [tokenBalances, setTokenBalances] = useState<TokenBalance[]>([]);
-  const [isNativeTokenSelected, setIsNativeTokenSelected] = useState(true);
   const network = allNetworks.find((n) => n.chainId === chainId);
   const [amount, setAmount] = useState("");
   const client = new SequenceIndexer(
     "https://" + network?.name + "-indexer.sequence.app",
     PROJECT_ACCESS_KEY
   );
-  const {sendTransaction, isPending: isNativeTransferPending} = useSendTransaction();
   const {writeContract, isPending: isWriteContractPending} = useWriteContract();
-  const isPending = isNativeTransferPending || isWriteContractPending;
+  const isPending = isWriteContractPending;
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -51,21 +49,27 @@ export const TransferTokenModal = ({
 
     try {
       setIsLoading(true);
-      const nativeTokenBalance = await client.getEtherBalance({
-        accountAddress: embeddedWalletAddress
-      } as GetEtherBalanceArgs);
+
       const tokenBalances = await client.getTokenBalances({
         accountAddress: embeddedWalletAddress,
         includeMetadata: true
       } as GetEtherBalanceArgs);
 
-      setNativeTokenBalance(ethers.BigNumber.from(nativeTokenBalance.balance.balanceWei));
-
       if (tokenBalances && tokenBalances.balances && tokenBalances.balances.length > 0) {
         const filteredBalances = tokenBalances.balances.filter(
-          (balance) => balance.contractType === "ERC20"
+          (balance) => balance.contractType !== "ERC20"
         );
-        setTokenBalances(filteredBalances);
+        let balances: TokenBalance[] = [];
+        for (const token of filteredBalances) {
+          const tokenInfo = await client.getTokenBalances({
+            accountAddress: embeddedWalletAddress,
+            contractAddress: token.contractAddress,
+            includeMetadata: true
+          } as GetEtherBalanceArgs);
+          balances = [...balances, ...tokenInfo.balances];
+        }
+        setTokenBalances(balances);
+        setSelectedToken(balances[0]);
       }
     } catch (error) {
       console.error(error);
@@ -76,23 +80,29 @@ export const TransferTokenModal = ({
 
   const sendTransactionHandler = async () => {
     const to = eoaWalletAddress as `0x${string}`;
+    const from = embeddedWalletAddress as `0x${string}`;
     const value = amount;
-
-    if (to && isNativeTokenSelected) {
-      sendTransaction({to, value: parseEther(value), gas: null});
-    }
 
     if (selectedToken) {
       const tokenAddress = selectedToken.contractAddress;
+      const abi =
+        selectedToken.contractInfo?.type === ContractType.ERC721
+          ? ERC721_ABI
+          : ERC1155_ABI;
+      const functionName =
+        selectedToken.contractInfo?.type === ContractType.ERC721
+          ? "transferFrom"
+          : "safeTransferFrom";
+      const args =
+        selectedToken.contractInfo?.type === ContractType.ERC721
+          ? [from, to, selectedToken.tokenID]
+          : [from, to, selectedToken.tokenID, value, "0x0"];
 
       writeContract({
         address: tokenAddress as `0x${string}`,
-        abi: ERC20_ABI,
-        functionName: "transfer",
-        args: [
-          to,
-          `${Number(value) * Math.pow(10, selectedToken.contractInfo?.decimals || 18)}`
-        ]
+        abi,
+        functionName,
+        args
       });
     }
   };
@@ -102,7 +112,7 @@ export const TransferTokenModal = ({
       <Box display="flex" flexDirection="column" gap="10" overflowY="scroll" padding="6">
         <Box flexDirection="column" gap="3">
           <Text as="h1" variant="normal" fontWeight="medium" color="text100">
-            Transfer Token
+            Transfer Collectible
           </Text>
 
           {isLoading ? (
@@ -119,22 +129,11 @@ export const TransferTokenModal = ({
                       maxHeight: "200px"
                     }}>
                     <Box flexDirection="column" gap="2">
-                      <NativeTokenSelectButton
-                        token={getNativeTokenInfo(chainId)!}
-                        selected={isNativeTokenSelected}
-                        handleSelectCoin={() => {
-                          setIsNativeTokenSelected(true);
-                          setSelectedToken(null);
-                        }}
-                        nativeTokenBalance={nativeTokenBalance!}
-                        chainId={chainId}
-                      />
                       {tokenBalances.map((token) => (
-                        <TokenSelectButton
+                        <CollectibleSelectButton
                           token={token}
                           selected={selectedToken === token}
                           handleSelectCoin={() => {
-                            setIsNativeTokenSelected(false);
                             setSelectedToken(token);
                           }}
                         />
@@ -156,14 +155,17 @@ export const TransferTokenModal = ({
                     labelLocation="left"
                   />
 
-                  <TextInput
-                    type="number"
-                    value={amount}
-                    label="Amount"
-                    labelLocation="left"
-                    onChange={(e: any) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
+                  {selectedToken &&
+                    selectedToken.contractType === ContractType.ERC1155 && (
+                      <TextInput
+                        type="number"
+                        value={amount}
+                        label="Amount"
+                        labelLocation="left"
+                        onChange={(e: any) => setAmount(e.target.value)}
+                        placeholder="Enter amount"
+                      />
+                    )}
 
                   <Button
                     marginLeft="auto"
@@ -172,7 +174,11 @@ export const TransferTokenModal = ({
                     shape="square"
                     leftIcon={isPending ? () => <Spinner /> : undefined}
                     label="Send Transaction"
-                    disabled={isPending || amount === ""}
+                    disabled={
+                      isPending ||
+                      (amount === "" &&
+                        selectedToken?.contractType === ContractType.ERC1155)
+                    }
                   />
                 </>
               )}
