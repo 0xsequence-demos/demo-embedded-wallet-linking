@@ -11,11 +11,11 @@ import {
   useMediaQuery
 } from "@0xsequence/design-system";
 import {useOpenConnectModal} from "@0xsequence/kit";
-import {useAccount} from "wagmi";
+import {useAccount, useSwitchChain} from "wagmi";
 import {useEffect, useState} from "react";
 
 import {Connected} from "./Connected";
-import {ClickToCopy} from "./ClickToCopy";
+import {ClickToCopy} from "../components/ClickToCopy/ClickToCopy";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 
@@ -24,13 +24,15 @@ const SERVER_URL = import.meta.env.VITE_SERVER_URL!;
 export const Homepage = () => {
   const [verifiedWaaSAddress, setVerifiedWaaSAddress] = useState<string>();
   const [inProgress, setInProgress] = useState<boolean>(false);
+  const urlParams = new URLSearchParams(location.search);
+  const chainId: string | null = urlParams.get("chainId");
 
   const verifyEmbeddedWallet = async () => {
     setInProgress(true);
-    const urlParams = new URLSearchParams(location.search);
+
     const nonce: string | null = urlParams.get("nonce");
     const signature: string | null = urlParams.get("signature");
-    const chainId: string | null = urlParams.get("chainId");
+
     const sessionId: string | null = urlParams.get("sessionId");
 
     console.log("nonce", nonce);
@@ -83,7 +85,10 @@ export const Homepage = () => {
         />
 
         {!inProgress && verifiedWaaSAddress != null ? (
-          <EmbeddedWalletState walletAddress={verifiedWaaSAddress} />
+          <EmbeddedWalletState
+            walletAddress={verifiedWaaSAddress}
+            chainId={Number(chainId || 1)}
+          />
         ) : (
           <Box gap="2" marginY="4" alignItems="center" justifyContent="center">
             <Spinner />
@@ -94,15 +99,24 @@ export const Homepage = () => {
   );
 };
 
-const EmbeddedWalletState = (props: {walletAddress?: string}) => {
+const EmbeddedWalletState = (props: {
+  walletAddress: string | undefined;
+  chainId: number;
+}) => {
   const {walletAddress} = props;
   const {isConnected} = useAccount();
   const {setOpenConnectModal} = useOpenConnectModal();
   const isMobile = useMediaQuery("@media screen and (max-width: 500px)");
-
+  const {switchChain} = useSwitchChain();
   const onClickConnect = () => {
     setOpenConnectModal(true);
   };
+
+  useEffect(() => {
+    if (props.chainId) {
+      switchChain({chainId: props.chainId});
+    }
+  }, [props.chainId]);
 
   return (
     <Box padding="4" marginX="auto">
@@ -136,7 +150,10 @@ const EmbeddedWalletState = (props: {walletAddress?: string}) => {
           />
         </Box>
       ) : (
-        <Connected />
+        <Connected
+          chainId={props.chainId}
+          eoaWalletAddress={walletAddress as `0x${string}` | undefined}
+        />
       )}
     </Box>
   );

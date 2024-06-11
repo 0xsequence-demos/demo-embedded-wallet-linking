@@ -15,6 +15,8 @@
     "@0xsequence/kit-connectors": "^2.8.3",
     "@0xsequence/kit-wallet": "^2.8.3",
     "@0xsequence/network": "^1.9.27",
+    "@0xsequence/indexer": "^1.9.27",
+    "ethers": "5.7.2",
     "@tanstack/react-query": "^5.40.0",
     "framer-motion": "^11.2.10",
     "react": "^18.2.0",

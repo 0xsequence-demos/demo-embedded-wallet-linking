@@ -26,6 +26,7 @@ jobs:
       - name: Build
         env:
           VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+          VITE_SEQUENCE_PROJECT_ACCESS_KEY: ${{ secrets.VITE_SEQUENCE_PROJECT_ACCESS_KEY }}
         working-directory: ./client
         run: pnpm build
 
