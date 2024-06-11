@@ -106,7 +106,9 @@ export const TransferTokenModal = ({
           </Text>
 
           {isLoading ? (
-            <Spinner />
+            <Box alignItems="center" justifyContent="center">
+              <Spinner />
+            </Box>
           ) : (
             <>
               {tokenBalances && tokenBalances.length > 0 && (

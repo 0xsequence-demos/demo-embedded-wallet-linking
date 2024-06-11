@@ -116,7 +116,9 @@ export const TransferCollectibleModal = ({
           </Text>
 
           {isLoading ? (
-            <Spinner />
+            <Box alignItems="center" justifyContent="center">
+              <Spinner />
+            </Box>
           ) : (
             <>
               {tokenBalances && tokenBalances.length > 0 && (
