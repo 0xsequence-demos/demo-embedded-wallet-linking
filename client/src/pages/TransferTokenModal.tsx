@@ -111,76 +111,75 @@ export const TransferTokenModal = ({
             </Box>
           ) : (
             <>
-              {tokenBalances && tokenBalances.length > 0 ? (
-                <>
-                  <Box
-                    overflow="auto"
-                    style={{
-                      maxHeight: "200px"
-                    }}>
-                    <Box flexDirection="column" gap="2">
-                      <NativeTokenSelectButton
-                        token={getNativeTokenInfo(chainId)!}
-                        selected={isNativeTokenSelected}
-                        handleSelectCoin={() => {
-                          setIsNativeTokenSelected(true);
-                          setSelectedToken(null);
-                        }}
-                        nativeTokenBalance={nativeTokenBalance!}
-                        chainId={chainId}
-                      />
-                      {tokenBalances.map((token) => (
-                        <TokenSelectButton
-                          key={token.contractAddress}
-                          token={token}
-                          selected={selectedToken === token}
-                          handleSelectCoin={() => {
-                            setIsNativeTokenSelected(false);
-                            setSelectedToken(token);
-                          }}
-                        />
-                      ))}
-                    </Box>
+              <>
+                <Box
+                  overflow="auto"
+                  style={{
+                    maxHeight: "200px"
+                  }}>
+                  <Box flexDirection="column" gap="2">
+                    <NativeTokenSelectButton
+                      token={getNativeTokenInfo(chainId)!}
+                      selected={isNativeTokenSelected}
+                      handleSelectCoin={() => {
+                        setIsNativeTokenSelected(true);
+                        setSelectedToken(null);
+                      }}
+                      nativeTokenBalance={nativeTokenBalance!}
+                      chainId={chainId}
+                    />
+
+                    {tokenBalances && tokenBalances.length > 0 && (
+                      <>
+                        {tokenBalances.map((token) => (
+                          <TokenSelectButton
+                            key={token.contractAddress}
+                            token={token}
+                            selected={selectedToken === token}
+                            handleSelectCoin={() => {
+                              setIsNativeTokenSelected(false);
+                              setSelectedToken(token);
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
                   </Box>
+                </Box>
 
-                  <TextInput
-                    readOnly
-                    value={embeddedWalletAddress}
-                    label="From"
-                    labelLocation="left"
-                  />
+                <TextInput
+                  readOnly
+                  value={embeddedWalletAddress}
+                  label="From"
+                  labelLocation="left"
+                />
 
-                  <TextInput
-                    readOnly
-                    value={eoaWalletAddress}
-                    label="To"
-                    labelLocation="left"
-                  />
+                <TextInput
+                  readOnly
+                  value={eoaWalletAddress}
+                  label="To"
+                  labelLocation="left"
+                />
 
-                  <TextInput
-                    type="number"
-                    value={amount}
-                    label="Amount"
-                    labelLocation="left"
-                    onChange={(e: any) => setAmount(e.target.value)}
-                    placeholder="Enter amount"
-                  />
+                <TextInput
+                  type="number"
+                  value={amount}
+                  label="Amount"
+                  labelLocation="left"
+                  onChange={(e: any) => setAmount(e.target.value)}
+                  placeholder="Enter amount"
+                />
 
-                  <Button
-                    marginLeft="auto"
-                    onClick={sendTransactionHandler}
-                    variant="primary"
-                    shape="square"
-                    leftIcon={isPending ? () => <Spinner /> : undefined}
-                    label="Send Transaction"
-                    disabled={isPending || amount === ""}
-                  />
-                </>
-              ) : (
-                <Text variant="normal" fontWeight="medium" color="text50">
-                  No tokens available in this wallet.
-                </Text>
-              )}
+                <Button
+                  marginLeft="auto"
+                  onClick={sendTransactionHandler}
+                  variant="primary"
+                  shape="square"
+                  leftIcon={isPending ? () => <Spinner /> : undefined}
+                  label="Send Transaction"
+                  disabled={isPending || amount === ""}
+                />
+              </>
             </>
           )}
         </Box>
