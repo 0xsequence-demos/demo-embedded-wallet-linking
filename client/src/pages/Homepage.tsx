@@ -11,7 +11,7 @@ import {
   useMediaQuery
 } from "@0xsequence/design-system";
 import {useOpenConnectModal} from "@0xsequence/kit";
-import {useAccount, useSwitchChain} from "wagmi";
+import {useAccount, useSwitchChain, useDisconnect} from "wagmi";
 import {useEffect, useState} from "react";
 
 import {Connected} from "./Connected";
@@ -104,12 +104,15 @@ const EmbeddedWalletState = (props: {
   chainId: number;
 }) => {
   const {walletAddress} = props;
-  const {isConnected} = useAccount();
+  const {disconnect} = useDisconnect()
+  const {isConnected } = useAccount();
   const {setOpenConnectModal} = useOpenConnectModal();
   const isMobile = useMediaQuery("@media screen and (max-width: 500px)");
   const {switchChain} = useSwitchChain();
+
   const onClickConnect = () => {
-    setOpenConnectModal(true);
+    disconnect()
+    setTimeout(() => setOpenConnectModal(true), 1000)
   };
 
   useEffect(() => {
@@ -141,7 +144,7 @@ const EmbeddedWalletState = (props: {
         )}
       </Card>
 
-      {!isConnected ? (
+      {/* {!isConnected ? ( */}
         <Box marginX="auto" gap="2" justifyContent="center" marginTop="10">
           <Button
             onClick={onClickConnect}
@@ -149,12 +152,12 @@ const EmbeddedWalletState = (props: {
             label="Connect your EOA Wallet"
           />
         </Box>
-      ) : (
+      {walletAddress &&
         <Connected
           chainId={props.chainId}
           eoaWalletAddress={walletAddress as `0x${string}` | undefined}
         />
-      )}
+      }
     </Box>
   );
 };
