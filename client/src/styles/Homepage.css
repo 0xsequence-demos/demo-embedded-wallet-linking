@@ -1,0 +1,55 @@
+.container {
+    display: flex;
+    height: 85vh; /* Full height of the viewport */
+    width: 95vw;
+  }
+  
+  .left-side {
+    align-items: flex-start; /* Align items to the start */
+    padding-top: 21vh; 
+    flex: 1;
+    margin-left: 25px;
+    background-color: rgb(50, 50, 50);
+    border-radius: 10px;
+  }
+  
+  .right-side {
+    border-radius: 10px;
+    background-color: rgb(104, 0, 142);
+    flex: 1;
+    padding: 30px;
+    margin-left: 35px;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Optional: Add some styling for the components */
+  .left-side > * {
+    color: white; /* Ensure content is visible on purple background */
+  }
+  
+  .right-side > * {
+    color: white; /* Ensure content is visible on black background */
+  }
+  
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    padding: 10px;
+    height: 56vh;
+    overflow-y: auto;
+  }
+  
+  .image-container {
+    border-radius: 5px;
+    height: 200px;
+    overflow: hidden; /* Ensures the border-radius is applied to the image */
+  }
+  
+  .image {
+    width: 100%;
+    display: block;
+    border-radius: 5px;
+  }

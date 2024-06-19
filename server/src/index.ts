@@ -15,9 +15,6 @@ async function handleRequest(request: Request, env: Env, ctx: ExecutionContext) 
                     // Allow requests from any origin - adjust this as necessary
                     "Access-Control-Allow-Origin": "*",
                     
-                    // Allows the headers Content-Type, your-custom-header
-                    "Access-Control-Allow-Headers": "Content-Type, your-custom-header",
-                    
                     // Allow POST method - add any other methods you need to support
                     "Access-Control-Allow-Methods": "POST",
                     

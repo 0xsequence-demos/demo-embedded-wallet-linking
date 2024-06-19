@@ -11,14 +11,23 @@ import {ERC20_ABI} from "../constants/abi";
 import {NativeTokenSelectButton} from "../components/NativeTokenSelectButton/NativeTokenSelectButton";
 import {TokenSelectButton} from "../components/TokenSelectButton/TokenSelectButton";
 import {NetworkSwitch} from "../components/NetworkSwitch/NetworkSwitch";
+import { AnimatePresence } from "framer-motion";
 
 const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY;
 export const TransferTokenModal = ({
+  isLoading,
+  setIsLoading,
   chainId: chainIdFromProps,
   eoaWalletAddress,
   embeddedWalletAddress,
-  onClose
+  onClose,
+  isModalOpen,
+  setIsModalOpen
 }: {
+  isModalOpen: boolean,
+  setIsModalOpen: any,
+  isLoading: any;
+  setIsLoading: any;
   chainId: number;
   eoaWalletAddress: `0x${string}` | undefined;
   embeddedWalletAddress: `0x${string}` | undefined;
@@ -39,7 +48,6 @@ export const TransferTokenModal = ({
   const {sendTransaction, isPending: isNativeTransferPending} = useSendTransaction();
   const {writeContract, isPending: isWriteContractPending} = useWriteContract();
   const isPending = isNativeTransferPending || isWriteContractPending;
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (eoaWalletAddress && chainId) {

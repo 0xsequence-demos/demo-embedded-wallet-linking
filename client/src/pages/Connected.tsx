@@ -17,17 +17,29 @@ import {TransferTokenModal} from "./TransferTokenModal";
 import {TransferCollectibleModal} from "./TransferCollectibleModal";
 
 export const Connected = ({
+  setKey,
   eoaWalletAddress,
-  chainId
+  chainId,
+  isLoading,
+  setIsLoading,
+  isModalOpen,
+  setIsModalOpen,
+  isCollectibleModalOpen,
+  setIsCollectibleModalOpen,
 }: {
+  setKey: any;
   eoaWalletAddress: `0x${string}` | undefined;
   chainId: number;
+  isLoading: boolean;
+  setIsLoading: any;
+  isModalOpen: boolean;
+  setIsModalOpen: any;
+  isCollectibleModalOpen: any;
+  setIsCollectibleModalOpen: any;
 }) => {
   const {address} = useAccount();
   const {disconnect} = useDisconnect();
   const isMobile = useMediaQuery("@media screen and (max-width: 500px)");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isCollectibleModalOpen, setIsCollectibleModalOpen] = useState(false);
 
   return (
     <>
@@ -37,6 +49,7 @@ export const Connected = ({
         alignItems="center"
         marginTop="10"
         padding="6"
+        paddingLeft="10"
         style={{maxWidth: "700px"}}
         width="full">
         <Box flexDirection="column" gap="4">
@@ -47,7 +60,7 @@ export const Connected = ({
             {address && (
               <Box alignItems="center" gap="2">
                 <Text color="text100" fontSize="medium" fontWeight="medium">
-                  {isMobile ? truncateAddress(address) : address}
+                  {isMobile ? truncateAddress(address) : address.slice(0,20) + "..." + address.slice(address.length - 10, address.length)}
                 </Text>
 
                 <ClickToCopy textToCopy={address} />
@@ -56,10 +69,10 @@ export const Connected = ({
           </Box>
           <Box
             marginTop="2"
-            gap="4"
+            gap="1"
             justifyContent="space-between"
             flexDirection={{sm: "column", md: "row"}}>
-            <Box gap="2" flexDirection={{sm: "column", md: "row"}}>
+            <Box gap="1" flexDirection={{sm: "column", md: "row"}}>
               <Button
                 shape="square"
                 leftIcon={CurrencyIcon}
@@ -91,6 +104,10 @@ export const Connected = ({
 
       {isModalOpen && (
         <TransferTokenModal
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
           chainId={chainId}
           eoaWalletAddress={eoaWalletAddress}
           embeddedWalletAddress={address}
@@ -100,6 +117,9 @@ export const Connected = ({
 
       {isCollectibleModalOpen && (
         <TransferCollectibleModal
+          setKey={setKey}
+          isCollectibleModalOpen={isCollectibleModalOpen}
+          setIsCollectibleModalOpen={setIsCollectibleModalOpen}
           chainId={chainId}
           eoaWalletAddress={eoaWalletAddress}
           embeddedWalletAddress={address}
