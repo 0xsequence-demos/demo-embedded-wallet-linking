@@ -18,6 +18,7 @@ export const ContentModal = ({
   className?: string;
 }) => (
   <Modal
+    
     className={className}
     backdropColor="backgroundBackdrop"
     disableAnimation

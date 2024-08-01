@@ -8,22 +8,29 @@ import {
 import React, {useEffect, useState} from "react";
 import {ContentModal} from "../components/ContentModal/ContentModal";
 import {NetworkConfig, allNetworks} from "@0xsequence/network";
-import {useSwitchChain, useWriteContract} from "wagmi";
+import {useSwitchChain, useWriteContract, useAccount} from "wagmi";
 import {ERC1155_ABI, ERC721_ABI} from "../constants/abi";
 import {CollectibleSelectButton} from "../components/CollectibleSelectButton/CollectibleSelectButton";
 import {NetworkSwitch} from "../components/NetworkSwitch/NetworkSwitch";
+import {enabledChainIDMappings}from '../constants/network'
 
 const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY;
 export const TransferCollectibleModal = ({
+  setKey,
   chainId: chainIdFromProps,
   eoaWalletAddress,
   embeddedWalletAddress,
-  onClose
+  onClose,
+  isCollectibleModalOpen,
+  setIsCollectibleModalOpen,
 }: {
+  setKey: any;
   chainId: number;
   eoaWalletAddress: `0x${string}` | undefined;
   embeddedWalletAddress: `0x${string}` | undefined;
   onClose: () => void;
+  isCollectibleModalOpen: any;
+  setIsCollectibleModalOpen: any;
 }) => {
   const [chainId, setChainId] = useState<number>(chainIdFromProps);
   const [selectedToken, setSelectedToken] = useState<TokenBalance | null>(null);
@@ -34,7 +41,9 @@ export const TransferCollectibleModal = ({
     "https://" + network?.name + "-indexer.sequence.app",
     PROJECT_ACCESS_KEY
   );
-  const {writeContract, isPending: isWriteContractPending} = useWriteContract();
+  const {isConnected, address} = useAccount();
+
+  const {writeContract, status, isPending: isWriteContractPending} = useWriteContract();
   const isPending = isWriteContractPending;
   const [isLoading, setIsLoading] = useState(false);
   const {switchChain} = useSwitchChain();
@@ -44,6 +53,13 @@ export const TransferCollectibleModal = ({
       fetchTokenBalances();
     }
   }, [embeddedWalletAddress, chainId]);
+
+  useEffect(()=> {
+    if(status== 'pending'){
+      setIsCollectibleModalOpen(false)
+      setKey(Math.random())
+    }
+  }, [isWriteContractPending, status])
 
   const fetchTokenBalances = async () => {
     if (!network || !eoaWalletAddress) {

@@ -26,6 +26,32 @@ export const enabledChainIDs = [
   ChainId.XR_SEPOLIA
 ];
 
+export const enabledChainIDMappings: any = {
+  1: 'mainnet',
+  11155111:'sepolia',
+  42161: 'arbitrum',
+  42170: 'arbitrum-nova',
+  421614: 'arbitrum-sepolia',
+  137: 'polygon',
+  1101: 'polygon-zkevm',
+  80002: 'amoy',
+  8453: 'base',
+  84532: 'base-sepolia',
+  10: 'optimism',
+  11155420: 'optimism-sepolia',
+  43114: 'avalanche',
+  43113: 'avalanche-testnet',
+  19011: 'homeverse',
+  40875: 'homeverse-testnet',
+  56: 'bsc',
+  97: 'bsc-tesnet',
+  3776: 'astar-zkevm',
+  6038361: 'astar-zkyoto',
+  660279: 'xai',
+  37714555529: 'xai-sepolia',
+  3770: 'xr-sepolia'
+}
+
 export const explorerNetworks = Object.fromEntries(
   Object.entries(networks).filter(([chainID]) =>
     enabledChainIDs.includes(parseInt(chainID))
