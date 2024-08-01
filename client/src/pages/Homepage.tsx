@@ -71,14 +71,6 @@ export const Homepage = () => {
           body: JSON.stringify(bodyData)
       })
 
-    // const response = await fetch(`${SERVER_URL}/ValidateWaaSVerificationNonce`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    //   body: JSON.stringify({nonce, signature, chainId, sessionId})
-    // });
-
     const data = await response.json();
 
     if (data.walletAddress) {
