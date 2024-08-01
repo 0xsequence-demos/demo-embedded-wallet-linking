@@ -54,13 +54,30 @@ export const Homepage = () => {
       return;
     }
 
-    const response = await fetch(`${SERVER_URL}/verifyNonce`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({nonce, signature, chainId, sessionId})
-    });
+
+    const apiUrl = 'https://dev-api.sequence.app/rpc/API/ValidateWaaSVerificationNonce';
+      
+      const headers = {
+          'Content-Type': 'application/json'
+      };
+
+      const bodyData = {nonce, signature, chainId, sessionId}
+
+      console.log(bodyData)
+
+      const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(bodyData)
+      })
+
+    // const response = await fetch(`${SERVER_URL}/ValidateWaaSVerificationNonce`, {
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json"
+    //   },
+    //   body: JSON.stringify({nonce, signature, chainId, sessionId})
+    // });
 
     const data = await response.json();
 
@@ -138,7 +155,7 @@ const Inventory = (props: any) => {
     queryBalances()
   }, [props.key])
 
-  const multiQuery = async (addresses: string[]) => {
+  const query = async (addresses: string[]) => {
     const urlParams = new URLSearchParams(location.search);
     const chainId: string = urlParams.get("chainId")!;
 
@@ -171,28 +188,33 @@ const Inventory = (props: any) => {
 
   const queryBalances = async () => {
     if(address){
-
-    const tokenBalances = await multiQuery([address])
-        const images: any = []
-        tokenBalances.map((token: any) => {
-          if(token.tokenMetadata?.image){
-            images.push(token.tokenMetadata?.image)
+      const tokenBalances = await query([address])
+      const images: any = []
+      console.log(tokenBalances)
+      await Promise.all(tokenBalances.map(async (token: any) => {
+        if(token.tokenMetadata?.image){
+          const response = await fetch(token.tokenMetadata.image)
+          if (response.ok) {
+            images.push(token.tokenMetadata.image)
           }
-        })
-        setEoaWalletGallery(images)
-
-       
+        }
+      }))
+      setEoaWalletGallery(images)
     } else {
       setEoaWalletGallery([])
     }
-    const tokenBalancesEmbeddedWallet = await multiQuery([props.embeddedWallet])
-    console.log(tokenBalancesEmbeddedWallet)
+
+    const tokenBalancesEmbeddedWallet = await query([props.embeddedWallet])
     const imagesEmbeddedWallet: any = []
-    tokenBalancesEmbeddedWallet.map((token: any) => {
+    
+    await Promise.all(tokenBalancesEmbeddedWallet.map(async (token: any) => {
       if(token.tokenMetadata?.image){
-        imagesEmbeddedWallet.push(token.tokenMetadata?.image)
+        const response = await fetch(token.tokenMetadata.image)
+        if (response.ok) {
+          imagesEmbeddedWallet.push(token.tokenMetadata.image)
+        }
       }
-    })
+    }))
     setEmbeddedWalletGallery(imagesEmbeddedWallet)
   }
 
@@ -205,30 +227,30 @@ const Inventory = (props: any) => {
       if(address){
         queryBalances()
         const urlParams = new URLSearchParams(location.search);
-    const chainId: string = urlParams.get("chainId")!;
-    const networkName: any = enabledChainIDMappings[chainId]
-    const indexer = new SequenceIndexer(`https://${networkName}-indexer.sequence.app`, 'c3bgcU3LkFR9Bp9jFssLenPAAAAAAAAAA')
- 
-    const req: any = {
-        filter: {
-          accounts: [address],
-        },
-    }
- 
-    const options = {
-      onMessage: (msg: any) => {
-        console.log('msg', msg)
-        queryBalances()
+        const chainId: string = urlParams.get("chainId")!;
+        const networkName: any = enabledChainIDMappings[chainId]
+        const indexer = new SequenceIndexer(`https://${networkName}-indexer.sequence.app`, 'c3bgcU3LkFR9Bp9jFssLenPAAAAAAAAAA')
+    
+        const req: any = {
+            filter: {
+              accounts: [address],
+            },
+        }
+    
+        const options = {
+          onMessage: (msg: any) => {
+            console.log('msg', msg)
+            queryBalances()
 
-      },
-      onError: (err: any) => {
-        console.error('err', err)
-      }
-    }
+          },
+          onError: (err: any) => {
+            console.error('err', err)
+          }
+        }
 
-    setTimeout(async () => {
-      await indexer.subscribeEvents(req, options)
-    }, 0)
+        setTimeout(async () => {
+          await indexer.subscribeEvents(req, options)
+        }, 0)
       }
     }, 0)
   }, [address, props.isLoading])
@@ -269,8 +291,8 @@ const Inventory = (props: any) => {
             </div>
           },
           {
-            value: 'both',
-            label: 'Both',
+            value: 'all',
+            label: 'All',
             content: <div className="gallery">{[...eoaWalletGallery, ...embeddedWalletGallery].map((image: any, index: any) => (
               <div className="image-container" key={index}>
                 <img src={image} alt={`img-${index}`} className="image" />
