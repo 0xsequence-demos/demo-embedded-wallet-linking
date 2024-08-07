@@ -12,7 +12,7 @@ import {NativeTokenSelectButton} from "../components/NativeTokenSelectButton/Nat
 import {TokenSelectButton} from "../components/TokenSelectButton/TokenSelectButton";
 import {NetworkSwitch} from "../components/NetworkSwitch/NetworkSwitch";
 
-const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY || 'AQAAAAAAAHrqUwbcerMftkromNHeuCzxFEA';
+const PROJECT_ACCESS_KEY = import.meta.env.VITE_SEQUENCE_PROJECT_ACCESS_KEY || 'AQAAAAAAADVH8R2AGuQhwQ1y8NaEf1T7PJM';
 export const TransferTokenModal = ({
   isLoading,
   setIsLoading,
