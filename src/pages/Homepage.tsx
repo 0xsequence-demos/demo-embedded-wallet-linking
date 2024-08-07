@@ -22,7 +22,6 @@ import {SequenceIndexer} from '@0xsequence/indexer'
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 import { networks, findSupportedNetwork, NetworkConfig } from '@0xsequence/network'
 import {enabledChainIDMappings}from '../constants/network'
-const SERVER_URL = import.meta.env.VITE_SERVER_URL!;
 
 export const Homepage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
