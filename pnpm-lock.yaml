@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       0xsequence:
-        specifier: ^1.10.8
-        version: 1.10.9(bufferutil@4.0.8)(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
+        specifier: github.com/0xsequence/sequence.js
+        version: link:github.com/0xsequence/sequence.js
       '@0xsequence/design-system':
         specifier: ^1.7.1
         version: 1.7.5(@types/react-dom@18.3.0)(@types/react@18.3.3)(framer-motion@11.3.21(@emotion/is-prop-valid@0.8.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -19,13 +19,13 @@ importers:
         version: 1.9.29
       '@0xsequence/kit':
         specifier: ^2.10.1
-        version: 2.10.1(vg5off3t4wd46x7yee2bamqr4i)
+        version: 2.10.1(vrx773lbymmvj2ilynhgmjy6iu)
       '@0xsequence/kit-checkout':
         specifier: ^2.8.3
-        version: 2.10.1(ptpa2ah3t2563kpes5mknegeau)
+        version: 2.10.1(ckfyh6xntqocsh7ufobdt4k32m)
       '@0xsequence/kit-wallet':
         specifier: ^2.8.3
-        version: 2.10.1(jbzeio366lnhcjlrbnmp4kndx4)
+        version: 2.10.1(fubsfmuqxxpzofje55zbwvzwnm)
       '@0xsequence/network':
         specifier: ^1.9.27
         version: 1.10.9(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))
@@ -6391,13 +6391,13 @@ snapshots:
 
   '@0xsequence/indexer@1.9.29': {}
 
-  '@0xsequence/kit-checkout@2.10.1(ptpa2ah3t2563kpes5mknegeau)':
+  '@0xsequence/kit-checkout@2.10.1(ckfyh6xntqocsh7ufobdt4k32m)':
     dependencies:
       0xsequence: 1.10.9(bufferutil@4.0.8)(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
       '@0xsequence/api': 1.10.9
       '@0xsequence/design-system': 1.7.5(@types/react-dom@18.3.0)(@types/react@18.3.3)(framer-motion@11.3.21(@emotion/is-prop-valid@0.8.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@0xsequence/indexer': 1.10.9
-      '@0xsequence/kit': 2.10.1(vg5off3t4wd46x7yee2bamqr4i)
+      '@0xsequence/kit': 2.10.1(vrx773lbymmvj2ilynhgmjy6iu)
       '@0xsequence/metadata': 1.10.9
       '@0xsequence/network': 1.10.9(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@paperxyz/react-client-sdk': 1.1.5(@babel/core@7.25.2)(bufferutil@4.0.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
@@ -6415,13 +6415,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@0xsequence/kit-wallet@2.10.1(jbzeio366lnhcjlrbnmp4kndx4)':
+  '@0xsequence/kit-wallet@2.10.1(fubsfmuqxxpzofje55zbwvzwnm)':
     dependencies:
       0xsequence: 1.10.9(bufferutil@4.0.8)(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
       '@0xsequence/api': 1.10.9
       '@0xsequence/design-system': 1.7.5(@types/react-dom@18.3.0)(@types/react@18.3.3)(framer-motion@11.3.21(@emotion/is-prop-valid@0.8.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@0xsequence/indexer': 1.10.9
-      '@0xsequence/kit': 2.10.1(vg5off3t4wd46x7yee2bamqr4i)
+      '@0xsequence/kit': 2.10.1(vrx773lbymmvj2ilynhgmjy6iu)
       '@0xsequence/metadata': 1.10.9
       '@0xsequence/network': 1.10.9(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       '@radix-ui/react-popover': 1.1.1(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -6443,9 +6443,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@0xsequence/kit@2.10.1(vg5off3t4wd46x7yee2bamqr4i)':
+  '@0xsequence/kit@2.10.1(vrx773lbymmvj2ilynhgmjy6iu)':
     dependencies:
-      0xsequence: 1.10.9(bufferutil@4.0.8)(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
+      0xsequence: link:github.com/0xsequence/sequence.js
       '@0xsequence/api': 1.10.9
       '@0xsequence/auth': 1.10.9(bufferutil@4.0.8)(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))(utf-8-validate@5.0.10)
       '@0xsequence/core': 1.10.9(ethers@5.7.2(bufferutil@4.0.8)(utf-8-validate@5.0.10))
