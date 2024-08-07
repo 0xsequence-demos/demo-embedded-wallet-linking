@@ -20,7 +20,6 @@ import {Connected} from "./Connected";
 import {ClickToCopy} from "../components/ClickToCopy/ClickToCopy";
 import {SequenceIndexer} from '@0xsequence/indexer'
 import sequenceIconSrc from "../asset/sequence-icon.svg";
-import { networks, findSupportedNetwork, NetworkConfig } from '@0xsequence/network'
 import {enabledChainIDMappings}from '../constants/network'
 
 export const Homepage = () => {
@@ -128,6 +127,13 @@ export const Homepage = () => {
           </Box>
         )}
       </Box>
+
+    <Button label="test" onClick={()=>{
+      fetch('/example').then((r)=>{
+        
+        debugger
+      })
+    }}></Button>
     </main>
   );
 };
