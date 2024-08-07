@@ -128,12 +128,26 @@ export const Homepage = () => {
         )}
       </Box>
 
-    <Button label="test" onClick={()=>{
+      <Button label="example" onClick={()=>{
       fetch('/example').then((r)=>{
-        
         debugger
       })
-    }}></Button>
+    }} />
+    <Button label="test" onClick={()=>{
+      fetch('/test').then((r)=>{
+        debugger
+      })
+    }} />
+    <Button label="nothing" onClick={()=>{
+      fetch('/nothing').then((r)=>{
+        debugger
+      })
+    }} />
+    <Button label="example2" onClick={()=>{
+      fetch('/example2').then((r)=>{
+        debugger
+      })
+    }} />
     </main>
   );
 };
