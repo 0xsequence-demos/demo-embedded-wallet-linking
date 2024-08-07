@@ -158,6 +158,11 @@ export const Homepage = () => {
         debugger
       })
     }} />
+    <Button label="generateNonce3" onClick={()=>{
+      fetch('/generateNonce3').then((r)=>{
+        debugger
+      })
+    }} />
     <Button label="verifyNonce" onClick={()=>{
       fetch('/verifyNonce').then((r)=>{
         debugger
