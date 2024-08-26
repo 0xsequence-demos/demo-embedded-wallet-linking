@@ -1,15 +1,15 @@
-import React, {PropsWithChildren} from "react";
+import React, { PropsWithChildren } from "react";
 
-import {Box, CheckmarkIcon, CopyIcon} from "@0xsequence/design-system";
-import {useClipboard} from "../../hooks/useClipboard";
+import { Box, CheckmarkIcon, CopyIcon } from "@0xsequence/design-system";
+import { useClipboard } from "../hooks/useClipboard";
 
 export const ClickToCopy = ({
   children,
-  textToCopy
+  textToCopy,
 }: PropsWithChildren<{
   textToCopy: string;
 }>) => {
-  const {copy, isCopied} = useClipboard();
+  const { copy, isCopied } = useClipboard();
 
   return (
     <Box alignItems={"center"} display={"flex"} flexDirection={"row"} gap={"1"}>

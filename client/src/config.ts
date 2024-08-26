@@ -1,45 +1,58 @@
-import { KitConfig, getKitConnectWallets, getDefaultConnectors } from '@0xsequence/kit'
-import { findNetworkConfig, allNetworks } from '@0xsequence/network'
-import { Transport, zeroAddress } from 'viem'
-import { createConfig, http } from 'wagmi'
-import { Chain, arbitrumNova, arbitrumSepolia, mainnet, polygon } from 'wagmi/chains'
+import {
+  KitConfig,
+  getDefaultConnectors,
+  getDefaultWaasConnectors,
+  getDefaultChains,
+} from "@0xsequence/kit";
+import { ChainId } from "@0xsequence/network";
+import { Transport } from "viem";
+import { createConfig, http } from "wagmi";
+import { SequenceWaaS } from "@0xsequence/waas";
 
-const projectAccessKey = 'pk_live_4e4b3b4b-1b4b-4b4b-8b4b-4b4b4b4b4b4b'
+const projectAccessKey = "AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI";
 
-import { getDefaultChains } from '@0xsequence/kit'
- 
-const chains = [arbitrumNova, arbitrumSepolia, mainnet, polygon] as const satisfies Chain[] // optionally, supply an array of chain ID's getDefaultChains([1,137])
-const transports = Object.fromEntries(chains.map(chain => [chain.id, http()]));
+const chains = getDefaultChains([ChainId.POLYGON]);
+const transports = chains.reduce<Record<number, Transport>>((acc, chain) => {
+  acc[chain.id] = http();
+  return acc;
+}, {});
 
-chains.forEach(chain => {
-  const network = findNetworkConfig(allNetworks, chain.id)
-  if (!network) return
-  transports[chain.id] = http(network.rpcUrl)
-})
+const waasConfigKey =
+  "eyJwcm9qZWN0SWQiOjE2ODE1LCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI2N2V2NXVvc3ZxMzVmcGI2OXI3NnJoYnVoIiwicnBjU2VydmVyIjoiaHR0cHM6Ly93YWFzLnNlcXVlbmNlLmFwcCJ9";
+export const googleClientId =
+  "970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com";
+const appleClientId = "com.horizon.sequence.waas";
+const appleRedirectURI = window.location.origin + window.location.pathname;
 
 const getUniversalConnectors = () => {
   const connectors = [
     ...getDefaultConnectors({
-      walletConnectProjectId: 'c65a6cb1aa83c4e24500130f23a437d8',
-      defaultChainId: arbitrumNova.id,
-      appName: 'Link EOA Wallet',
-      projectAccessKey
+      walletConnectProjectId: "c65a6cb1aa83c4e24500130f23a437d8",
+      defaultChainId: ChainId.ARBITRUM_NOVA,
+      appName: "demo app",
+      projectAccessKey,
     }),
-  ]
-  return connectors
-}
+  ];
+  return connectors;
+};
 
 export const wagmiConfig = createConfig({
   // @ts-ignore
   transports,
   chains,
-  connectors: getUniversalConnectors()
-})
+  connectors: getUniversalConnectors(),
+});
 
 export const kitConfig: KitConfig = {
   projectAccessKey,
-  defaultTheme: 'dark',
+  defaultTheme: "dark",
   signIn: {
-    projectName: 'Link EOA Wallet'
-  }
-}
+    projectName: "Link Wallet Demo",
+  },
+};
+
+export const sequenceWaas = new SequenceWaaS({
+  network: "polygon",
+  projectAccessKey: projectAccessKey,
+  waasConfigKey: waasConfigKey,
+});
