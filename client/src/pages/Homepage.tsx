@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
@@ -12,7 +11,6 @@ import {
 } from "@0xsequence/design-system";
 import { useOpenConnectModal } from "@0xsequence/kit";
 import { SequenceWaaS } from "@0xsequence/waas";
-
 import { useAccount, useDisconnect, useWalletClient } from "wagmi";
 
 import { Connected } from "../components/Connected";

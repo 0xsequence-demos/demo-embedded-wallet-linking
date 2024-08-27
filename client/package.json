@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 4444",
     "build": "tsc && vite build",
     "serve": "vite preview",
     "test": "vitest"
