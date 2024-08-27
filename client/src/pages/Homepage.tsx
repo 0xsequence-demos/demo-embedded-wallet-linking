@@ -19,7 +19,7 @@ import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
 import { API } from "../api/api.gen";
-import { projectAccessKey, sequenceWaas, waasConfigKey } from "../config";
+import { sequenceWaas } from "../config";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 
@@ -157,11 +157,11 @@ export const Homepage = () => {
 
   const handleOnUnlinkClick = async () => {
     if (!parentWalletAddress) {
-      console.error("Parent wallet address not set");
+      console.error("Parent wallet address not set.");
       throw new Error("Parent wallet address not set");
     }
     if (!childWalletAddress) {
-      console.error("Child wallet address not set");
+      console.error("Child wallet address not set.");
       throw new Error("Child wallet address not set");
     }
 

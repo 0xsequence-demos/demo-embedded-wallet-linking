@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from "react";
+import { PropsWithChildren } from "react";
 
 import { Box, CheckmarkIcon, CopyIcon } from "@0xsequence/design-system";
 import { useClipboard } from "../hooks/useClipboard";
