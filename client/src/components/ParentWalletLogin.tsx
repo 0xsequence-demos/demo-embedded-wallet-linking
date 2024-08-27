@@ -18,7 +18,9 @@ import { randomName } from "../utils/string";
 
 import { useEmailAuth } from "../hooks/useEmailAuth";
 
-import { googleClientId, sequenceWaas } from "../config";
+import { googleClientId } from "../config";
+
+import { sequenceWaas } from "../pages/Homepage";
 
 export const ParentWalletLogin = ({
   setParentWalletAddress,

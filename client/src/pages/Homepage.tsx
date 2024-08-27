@@ -11,6 +11,7 @@ import {
   SignoutIcon,
 } from "@0xsequence/design-system";
 import { useOpenConnectModal } from "@0xsequence/kit";
+import { SequenceWaaS } from "@0xsequence/waas";
 
 import { useAccount, useDisconnect, useWalletClient } from "wagmi";
 
@@ -19,11 +20,17 @@ import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
 import { API } from "../api/api.gen";
-import { sequenceWaas } from "../config";
+import { projectAccessKey, waasConfigKey } from "../config";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 
 const api = new API("https://dev-api.sequence.app", fetch);
+
+export const sequenceWaas = new SequenceWaaS({
+  network: "polygon",
+  projectAccessKey: projectAccessKey,
+  waasConfigKey: waasConfigKey,
+});
 
 export const Homepage = () => {
   const isMobile = useMediaQuery("@media screen and (max-width: 500px)");

@@ -45,9 +45,3 @@ export const kitConfig: KitConfig = {
     projectName: "Link Wallet Demo",
   },
 };
-
-export const sequenceWaas = new SequenceWaaS({
-  network: "polygon",
-  projectAccessKey: projectAccessKey,
-  waasConfigKey: waasConfigKey,
-});

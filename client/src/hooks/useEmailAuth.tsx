@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@0xsequence/design-system";
 import { Challenge } from "@0xsequence/waas";
 
-import { sequenceWaas } from "../config";
+import { sequenceWaas } from "../pages/Homepage";
 
 export const isAccountAlreadyLinkedError = (e: any) => {
   return e.name === "AccountAlreadyLinked";
