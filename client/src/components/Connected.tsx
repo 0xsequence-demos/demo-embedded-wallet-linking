@@ -7,20 +7,24 @@ import {
   useMediaQuery,
   truncateAddress,
   ExternalLinkIcon,
+  Spinner,
 } from "@0xsequence/design-system";
 
-import { useAccount, useDisconnect } from "wagmi";
 import { ClickToCopy } from "./ClickToCopy";
 
 export const Connected = ({
   address,
   isLinked,
+  isLinkInProgress,
+  isUnlinkInProgress,
   onLinkClick,
   onUnlinkClick,
   onDisconnectClick,
 }: {
   address: string;
   isLinked: boolean;
+  isLinkInProgress: boolean;
+  isUnlinkInProgress: boolean;
   onLinkClick: () => void;
   onUnlinkClick: () => void;
   onDisconnectClick: () => void;
@@ -57,13 +61,21 @@ export const Connected = ({
           >
             <Box gap="1" flexDirection={{ sm: "column", md: "row" }}>
               {!isLinked && (
-                <Button
-                  shape="square"
-                  leftIcon={ExternalLinkIcon}
-                  label="Link"
-                  width={{ sm: "full", md: "auto" }}
-                  onClick={onLinkClick}
-                />
+                <>
+                  {isLinkInProgress ? (
+                    <Box alignItems="center">
+                      <Spinner />
+                    </Box>
+                  ) : (
+                    <Button
+                      shape="square"
+                      leftIcon={ExternalLinkIcon}
+                      label="Link"
+                      width={{ sm: "full", md: "auto" }}
+                      onClick={onLinkClick}
+                    />
+                  )}
+                </>
               )}
               {isLinked && (
                 <Box flexDirection="row" gap="5" alignItems="center">
@@ -71,11 +83,17 @@ export const Connected = ({
                     Linked
                   </Text>
 
-                  <Button
-                    shape="square"
-                    label="Unlink"
-                    onClick={onUnlinkClick}
-                  />
+                  {isUnlinkInProgress ? (
+                    <Box alignItems="center">
+                      <Spinner />
+                    </Box>
+                  ) : (
+                    <Button
+                      shape="square"
+                      label="Unlink"
+                      onClick={onUnlinkClick}
+                    />
+                  )}
                 </Box>
               )}
             </Box>

@@ -1,57 +1,32 @@
 import { useEffect, useState } from "react";
+
 import {
   Box,
   Button,
   Card,
   Text,
   Image,
-  Spinner,
   truncateAddress,
   useMediaQuery,
+  SignoutIcon,
 } from "@0xsequence/design-system";
 import { useOpenConnectModal } from "@0xsequence/kit";
-import {
-  useAccount,
-  useSwitchChain,
-  useDisconnect,
-  useWalletClient,
-} from "wagmi";
+
+import { useAccount, useDisconnect, useWalletClient } from "wagmi";
 
 import { Connected } from "../components/Connected";
 import { ClickToCopy } from "../components/ClickToCopy";
+import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
-import {
-  CredentialResponse,
-  GoogleLogin,
-  GoogleOAuthProvider,
-} from "@react-oauth/google";
+import { API } from "../api/api.gen";
+import { projectAccessKey, sequenceWaas, waasConfigKey } from "../config";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
-import { API } from "../api/api.gen";
-import { googleClientId, sequenceWaas } from "../config";
-import { randomName } from "../utils/string";
 
 const api = new API("https://dev-api.sequence.app", fetch);
 
 export const Homepage = () => {
-  const handleGoogleLogin = async (tokenResponse: CredentialResponse) => {
-    try {
-      const res = await sequenceWaas.signIn(
-        {
-          idToken: tokenResponse.credential!,
-        },
-        randomName()
-      );
-
-      setParentWalletAddress(res.wallet);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   const isMobile = useMediaQuery("@media screen and (max-width: 500px)");
-
-  const [inProgress, setInProgress] = useState<boolean>(false);
 
   const { setOpenConnectModal } = useOpenConnectModal();
 
@@ -133,6 +108,8 @@ export const Homepage = () => {
     return { parentSig, childSig };
   };
 
+  const [isLinkInProgress, setIsLinkInProgress] = useState(false);
+
   const handleOnLinkClick = async () => {
     if (!parentWalletAddress) {
       console.error("Parent wallet address not set");
@@ -143,30 +120,40 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
+    setIsLinkInProgress(true);
+
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
     const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
 
-    const { parentSig, childSig } = await getSignatures(
-      finalParentWalletMessage,
-      finalChildWalletMessage
-    );
+    try {
+      const { parentSig, childSig } = await getSignatures(
+        finalParentWalletMessage,
+        finalChildWalletMessage
+      );
 
-    const response = await api.linkWallet({
-      chainId: "137",
-      parentWalletAddress,
-      parentWalletMessage: finalParentWalletMessage,
-      parentWalletSignature: parentSig,
-      linkedWalletMessage: finalChildWalletMessage,
-      linkedWalletSignature: childSig,
-    });
+      const response = await api.linkWallet({
+        chainId: "137",
+        parentWalletAddress,
+        parentWalletMessage: finalParentWalletMessage,
+        parentWalletSignature: parentSig,
+        linkedWalletMessage: finalChildWalletMessage,
+        linkedWalletSignature: childSig,
+      });
 
-    if (response.status) {
-      setLinkedWallets([
-        ...linkedWallets,
-        childWalletAddress.toLocaleLowerCase(),
-      ]);
+      if (response.status) {
+        setLinkedWallets([
+          ...linkedWallets,
+          childWalletAddress.toLocaleLowerCase(),
+        ]);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLinkInProgress(false);
     }
   };
+
+  const [isUnlinkInProgress, setIsUnlinkInProgress] = useState(false);
 
   const handleOnUnlinkClick = async () => {
     if (!parentWalletAddress) {
@@ -178,30 +165,44 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
+    setIsUnlinkInProgress(true);
+
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
     const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
 
-    const { parentSig, childSig } = await getSignatures(
-      finalParentWalletMessage,
-      finalChildWalletMessage
-    );
-
-    const response = await api.removeLinkedWallet({
-      chainId: "137",
-      parentWalletAddress,
-      parentWalletMessage: finalParentWalletMessage,
-      parentWalletSignature: parentSig,
-      linkedWalletMessage: finalChildWalletMessage,
-      linkedWalletSignature: childSig,
-    });
-
-    if (response.status) {
-      const filtered = linkedWallets.filter(
-        (wallet) => wallet !== childWalletAddress.toLocaleLowerCase()
+    try {
+      const { parentSig, childSig } = await getSignatures(
+        finalParentWalletMessage,
+        finalChildWalletMessage
       );
 
-      setLinkedWallets([...filtered]);
+      const response = await api.removeLinkedWallet({
+        chainId: "137",
+        parentWalletAddress,
+        parentWalletMessage: finalParentWalletMessage,
+        parentWalletSignature: parentSig,
+        linkedWalletMessage: finalChildWalletMessage,
+        linkedWalletSignature: childSig,
+      });
+
+      if (response.status) {
+        const filtered = linkedWallets.filter(
+          (wallet) => wallet !== childWalletAddress.toLocaleLowerCase()
+        );
+
+        setLinkedWallets([...filtered]);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsUnlinkInProgress(false);
     }
+  };
+
+  const handleOnParentWalletDisconnectClick = async () => {
+    setParentWalletAddress(undefined);
+    setLinkedWallets([]);
+    await sequenceWaas.dropSession();
   };
 
   const handleOnDisconnectClick = async () => {
@@ -226,7 +227,7 @@ export const Homepage = () => {
           }}
         />
 
-        {!inProgress && parentWalletAddress ? (
+        {parentWalletAddress ? (
           <>
             <Box padding="4">
               <Box marginBottom="4">
@@ -237,17 +238,18 @@ export const Homepage = () => {
 
               <Card
                 padding="6"
-                gap="2"
-                alignItems="center"
-                flexDirection={{ sm: "column", md: "row" }}
+                gap="4"
+                alignItems="flex-start"
+                flexDirection="column"
                 style={{ maxWidth: "700px" }}
                 width="full"
               >
-                <Text color="text50" fontSize="medium" fontWeight="bold">
-                  Parent Wallet:
-                </Text>
-                {parentWalletAddress && (
+                <Box>
                   <Box alignItems="center" gap="1">
+                    <Text color="text50" fontSize="medium" fontWeight="bold">
+                      Parent Wallet:
+                    </Text>
+
                     <Text color="text100" fontSize="medium" fontWeight="medium">
                       {isMobile
                         ? truncateAddress(parentWalletAddress)
@@ -261,16 +263,19 @@ export const Homepage = () => {
 
                     <ClickToCopy textToCopy={parentWalletAddress} />
                   </Box>
-                )}
+                </Box>
+                <Button
+                  marginLeft="auto"
+                  shape="square"
+                  variant="danger"
+                  rightIcon={SignoutIcon}
+                  label="Sign out"
+                  onClick={handleOnParentWalletDisconnectClick}
+                />
               </Card>
 
               {!childWalletAddress ? (
-                <Box
-                  marginX="auto"
-                  gap="2"
-                  justifyContent="center"
-                  marginTop="10"
-                >
+                <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
                   <Button
                     onClick={() => {
                       setOpenConnectModal(true);
@@ -286,6 +291,8 @@ export const Homepage = () => {
                     isLinked={linkedWallets.includes(
                       childWalletAddress.toLocaleLowerCase()
                     )}
+                    isLinkInProgress={isLinkInProgress}
+                    isUnlinkInProgress={isUnlinkInProgress}
                     onLinkClick={handleOnLinkClick}
                     onUnlinkClick={handleOnUnlinkClick}
                     onDisconnectClick={handleOnDisconnectClick}
@@ -320,16 +327,7 @@ export const Homepage = () => {
             </Box>
           </>
         ) : (
-          <Box gap="2" marginY="4" alignItems="center" justifyContent="center">
-            <GoogleOAuthProvider clientId={googleClientId}>
-              <GoogleLogin
-                key="google"
-                onSuccess={handleGoogleLogin}
-                shape="circle"
-                width={230}
-              />
-            </GoogleOAuthProvider>
-          </Box>
+          <ParentWalletLogin setParentWalletAddress={setParentWalletAddress} />
         )}
       </Box>
     </main>
