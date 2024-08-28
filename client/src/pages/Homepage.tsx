@@ -128,7 +128,8 @@ export const Homepage = () => {
     setIsLinkInProgress(true);
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
+    const finalChildWalletMessage =
+      "Link to " + childWalletMessage + parentWalletAddress;
 
     try {
       const { parentSig, childSig } = await getSignatures(
@@ -173,7 +174,8 @@ export const Homepage = () => {
     setIsUnlinkInProgress(true);
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
+    const finalChildWalletMessage =
+      "Unlink from " + childWalletMessage + parentWalletAddress;
 
     try {
       const { parentSig, childSig } = await getSignatures(
@@ -211,8 +213,14 @@ export const Homepage = () => {
   };
 
   const handleOnDisconnectClick = async () => {
-    setChildWalletAddress(undefined);
-    disconnect();
+    return new Promise<void>((resolve) => {
+      setChildWalletAddress(undefined);
+      disconnect(undefined, {
+        onSuccess: () => {
+          resolve();
+        },
+      });
+    });
   };
 
   return (
@@ -279,31 +287,37 @@ export const Homepage = () => {
                 />
               </Card>
 
-              {!childWalletAddress ? (
-                <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
-                  <Button
-                    onClick={() => {
-                      setOpenConnectModal(true);
-                    }}
-                    variant="feature"
-                    label="Connect your EOA Wallet"
-                  />
-                </Box>
-              ) : (
-                childWalletAddress && (
-                  <Connected
-                    address={childWalletAddress}
-                    isLinked={linkedWallets.includes(
-                      childWalletAddress.toLocaleLowerCase()
-                    )}
-                    isLinkInProgress={isLinkInProgress}
-                    isUnlinkInProgress={isUnlinkInProgress}
-                    onLinkClick={handleOnLinkClick}
-                    onUnlinkClick={handleOnUnlinkClick}
-                    onDisconnectClick={handleOnDisconnectClick}
-                  />
-                )
+              {childWalletAddress && (
+                <Connected
+                  address={childWalletAddress}
+                  isLinked={linkedWallets.includes(
+                    childWalletAddress.toLocaleLowerCase()
+                  )}
+                  isLinkInProgress={isLinkInProgress}
+                  isUnlinkInProgress={isUnlinkInProgress}
+                  onLinkClick={handleOnLinkClick}
+                  onUnlinkClick={handleOnUnlinkClick}
+                  onDisconnectClick={handleOnDisconnectClick}
+                />
               )}
+
+              <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
+                <Button
+                  onClick={async () => {
+                    if (childWalletAddress) {
+                      await handleOnDisconnectClick();
+                    }
+                    setOpenConnectModal(true);
+                  }}
+                  variant="feature"
+                  label={
+                    childWalletAddress
+                      ? "Connect another wallet"
+                      : "Connect external wallet to link"
+                  }
+                />
+              </Box>
+
               {linkedWallets.length > 0 && (
                 <Box marginTop="4">
                   <Box marginBottom="4">
