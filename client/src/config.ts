@@ -2,9 +2,11 @@ import {
   KitConfig,
   getDefaultConnectors,
   getDefaultChains,
+  getKitConnectWallets,
+  sequence,
+  walletConnect,
 } from "@0xsequence/kit";
 import { ChainId } from "@0xsequence/network";
-import { SequenceWaaS } from "@0xsequence/waas";
 import { Transport } from "viem";
 import { createConfig, http } from "wagmi";
 
@@ -20,22 +22,26 @@ export const waasConfigKey =
 export const googleClientId =
   "970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com";
 
-const getUniversalConnectors = () => {
-  const connectors = [
-    ...getDefaultConnectors({
-      walletConnectProjectId: "c65a6cb1aa83c4e24500130f23a437d8",
-      defaultChainId: ChainId.POLYGON,
-      appName: "Link Wallet Demo",
-      projectAccessKey,
-    }),
-  ];
-  return connectors;
-};
+const defaultChainId = ChainId.POLYGON;
+const walletConnectProjectId = "c65a6cb1aa83c4e24500130f23a437d8";
+const appName = "Link Wallet Demo";
+
+const connectors = getKitConnectWallets(projectAccessKey, [
+  sequence({
+    defaultNetwork: defaultChainId,
+    connect: {
+      app: appName,
+    },
+  }),
+  walletConnect({
+    projectId: walletConnectProjectId,
+  }),
+]);
 
 export const wagmiConfig = createConfig({
   transports,
   chains,
-  connectors: getUniversalConnectors(),
+  connectors,
 });
 
 export const kitConfig: KitConfig = {
