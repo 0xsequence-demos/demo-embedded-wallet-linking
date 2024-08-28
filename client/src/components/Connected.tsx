@@ -102,7 +102,7 @@ export const Connected = ({
               shape="square"
               variant="danger"
               rightIcon={SignoutIcon}
-              label="Sign out"
+              label="Disconnect"
               width={{ sm: "full", md: "auto" }}
               onClick={onDisconnectClick}
             />
