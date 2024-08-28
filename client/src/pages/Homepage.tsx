@@ -128,7 +128,8 @@ export const Homepage = () => {
     setIsLinkInProgress(true);
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
+    const finalChildWalletMessage =
+      "Link to " + childWalletMessage + parentWalletAddress;
 
     try {
       const { parentSig, childSig } = await getSignatures(
@@ -173,7 +174,8 @@ export const Homepage = () => {
     setIsUnlinkInProgress(true);
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage = childWalletMessage + parentWalletAddress;
+    const finalChildWalletMessage =
+      "Unlink from " + childWalletMessage + parentWalletAddress;
 
     try {
       const { parentSig, childSig } = await getSignatures(
