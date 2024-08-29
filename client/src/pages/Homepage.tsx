@@ -16,7 +16,6 @@ import { useOpenConnectModal } from "@0xsequence/kit";
 import { SequenceWaaS } from "@0xsequence/waas";
 import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 
-import { Connected } from "../components/Connected";
 import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
@@ -348,20 +347,6 @@ export const Homepage = () => {
                   onClick={handleOnParentWalletDisconnectClick}
                 />
               </Card>
-
-              {/* {childWalletAddress && (
-                <Connected
-                  address={childWalletAddress}
-                  isLinked={linkedWallets.includes(
-                    childWalletAddress.toLocaleLowerCase()
-                  )}
-                  isLinkInProgress={isLinkInProgress}
-                  isUnlinkInProgress={isUnlinkInProgress}
-                  onLinkClick={handleOnLinkClick}
-                  onUnlinkClick={handleOnUnlinkClick}
-                  onDisconnectClick={handleOnDisconnectClick}
-                />
-              )} */}
 
               {linkedWallets.length > 0 && (
                 <Box marginTop="4">
