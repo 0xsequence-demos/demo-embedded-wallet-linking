@@ -19,8 +19,9 @@ import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
-import { API } from "../api/api.gen";
 import { projectAccessKey, waasConfigKey } from "../config";
+
+import { API } from "../api/api.gen";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 
@@ -129,13 +130,11 @@ export const Homepage = () => {
       toast({
         title: "Request rejected",
         description:
-          "Please approve signature the request in your wallet to continue the operation.",
+          "Please approve signature the request in your wallet to continue.",
         variant: "error",
       });
       throw new Error("Could not get signature from wallet to be linked");
     }
-
-    console.log("childSig", childSig);
 
     return { parentSig, childSig };
   };
@@ -199,15 +198,15 @@ export const Homepage = () => {
           childWalletAddress.toLocaleLowerCase(),
         ]);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLinkInProgress(false);
       toast({
         title: "Linking successful",
         description: "The wallet has been linked successfully.",
         variant: "success",
       });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLinkInProgress(false);
     }
   };
 
@@ -220,8 +219,11 @@ export const Homepage = () => {
       if (walletToUnlink === childWalletAddress.toLocaleLowerCase()) {
         handleUnlink(walletToUnlink);
       } else {
+        const wallet = walletToUnlink;
         handleDisconnect().then(() => {
           setOpenConnectModal(true);
+          // need to set again here because it gets reset by the connect modal closing
+          setWalletToUnlink(wallet);
         });
       }
     } else if (walletToUnlink) {
@@ -266,15 +268,15 @@ export const Homepage = () => {
 
         setLinkedWallets([...filtered]);
       }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setWalletToUnlink(undefined);
       toast({
         title: "Unlinking successful",
         description: "The wallet has been unlinked successfully.",
         variant: "success",
       });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setWalletToUnlink(undefined);
     }
   };
 
@@ -397,7 +399,11 @@ export const Homepage = () => {
                                   ? "Unlink"
                                   : "Connect and unlink"
                               }
-                              onClick={() => {
+                              onClick={async () => {
+                                if (walletToUnlink) {
+                                  setWalletToUnlink(undefined);
+                                  await handleDisconnect();
+                                }
                                 setWalletToUnlink(wallet);
                               }}
                             />
@@ -415,8 +421,8 @@ export const Homepage = () => {
                     setWalletToUnlink(undefined);
                     if (childWalletAddress) {
                       await handleDisconnect();
-                      setIsLinkInProgress(true);
                     }
+                    setIsLinkInProgress(true);
                     setOpenConnectModal(true);
                   }}
                   variant="feature"
