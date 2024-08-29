@@ -6,9 +6,7 @@ It uses sequence.js embedded wallet (WaaS) package to login to the parent wallet
 ## Preview
 
 
-
-https://github.com/user-attachments/assets/dff3893e-f5b0-412c-9933-0ad947da1c13
-
+https://github.com/user-attachments/assets/d693b488-42f4-4d5a-a6de-d516942b416e
 
 
 
