@@ -89,8 +89,19 @@ export const Homepage = () => {
   }, [kitWalletAddress]);
 
   const getLinkedWallets = async () => {
+    const message = "parent wallet with address " + parentWalletAddress;
+    const signature = await sequenceWaas.signMessage({
+      message: message,
+    });
+    if (!signature.data.signature) {
+      console.error("Could not get signature from wallet to be linked");
+      throw new Error("Could not get signature from wallet to be linked");
+    }
     const response = await api.getLinkedWallets({
-      walletAddress: parentWalletAddress as `0x${string}`,
+      parentWalletAddress: parentWalletAddress as `0x${string}`,
+      parentWalletMessage: message,
+      parentWalletSignature: signature.data.signature,
+      signatureChainId: "137",
     });
 
     setLinkedWallets(response.linkedWallets);
@@ -173,10 +184,11 @@ export const Homepage = () => {
       }
 
       const response = await api.linkWallet({
-        chainId: "137",
+        signatureChainId: "137",
         parentWalletAddress,
         parentWalletMessage: finalParentWalletMessage,
         parentWalletSignature: parentSig,
+        linkedWalletAddress: childWalletAddress,
         linkedWalletMessage: finalChildWalletMessage,
         linkedWalletSignature: childSig,
       });
@@ -238,10 +250,11 @@ export const Homepage = () => {
       );
 
       const response = await api.removeLinkedWallet({
-        chainId: "137",
+        signatureChainId: "137",
         parentWalletAddress,
         parentWalletMessage: finalParentWalletMessage,
         parentWalletSignature: parentSig,
+        linkedWalletAddress: childWalletAddress,
         linkedWalletMessage: finalChildWalletMessage,
         linkedWalletSignature: childSig,
       });
