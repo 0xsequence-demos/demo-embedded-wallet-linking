@@ -8,17 +8,20 @@ import {
   truncateAddress,
   useMediaQuery,
   SignoutIcon,
+  Modal,
+  Spinner,
+  useToast,
 } from "@0xsequence/design-system";
 import { useOpenConnectModal } from "@0xsequence/kit";
 import { SequenceWaaS } from "@0xsequence/waas";
-import { useAccount, useDisconnect, useWalletClient } from "wagmi";
+import { useAccount, useDisconnect, useSignMessage } from "wagmi";
 
-import { Connected } from "../components/Connected";
 import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
-import { API } from "../api/api.gen";
 import { projectAccessKey, waasConfigKey } from "../config";
+
+import { API } from "../api/api.gen";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 
@@ -31,14 +34,16 @@ export const sequenceWaas = new SequenceWaaS({
 });
 
 export const Homepage = () => {
-  const isMobile = useMediaQuery("@media screen and (max-width: 500px)");
+  const isMobile = useMediaQuery("@media screen and (max-width: 770px)");
 
-  const { setOpenConnectModal } = useOpenConnectModal();
+  const toast = useToast();
+
+  const { setOpenConnectModal, openConnectModalState } = useOpenConnectModal();
 
   const { disconnect } = useDisconnect();
 
   const { address: kitWalletAddress } = useAccount();
-  const { data: walletClient } = useWalletClient();
+  const { signMessageAsync } = useSignMessage();
 
   const [linkedWallets, setLinkedWallets] = useState<string[]>([]);
 
@@ -85,8 +90,19 @@ export const Homepage = () => {
   }, [kitWalletAddress]);
 
   const getLinkedWallets = async () => {
+    const message = "parent wallet with address " + parentWalletAddress;
+    const signature = await sequenceWaas.signMessage({
+      message: message,
+    });
+    if (!signature.data.signature) {
+      console.error("Could not get signature from wallet to be linked");
+      throw new Error("Could not get signature from wallet to be linked");
+    }
     const response = await api.getLinkedWallets({
-      walletAddress: parentWalletAddress as `0x${string}`,
+      parentWalletAddress: parentWalletAddress as `0x${string}`,
+      parentWalletMessage: message,
+      parentWalletSignature: signature.data.signature,
+      signatureChainId: "137",
     });
 
     setLinkedWallets(response.linkedWallets);
@@ -105,17 +121,33 @@ export const Homepage = () => {
 
     const parentSig = parentSigRes.data.signature;
 
-    const childSig = (await walletClient?.signMessage({
-      account: childWalletAddress as `0x${string}`,
-      message: childMessage,
-    })) as string;
+    let childSig: string;
+    try {
+      childSig = (await signMessageAsync({
+        message: childMessage,
+      })) as string;
+    } catch (error) {
+      toast({
+        title: "Request rejected",
+        description:
+          "Please approve signature the request in your wallet to continue.",
+        variant: "error",
+      });
+      throw new Error("Could not get signature from wallet to be linked");
+    }
 
     return { parentSig, childSig };
   };
 
   const [isLinkInProgress, setIsLinkInProgress] = useState(false);
 
-  const handleOnLinkClick = async () => {
+  useEffect(() => {
+    if (isLinkInProgress && childWalletAddress) {
+      handleLink();
+    }
+  }, [isLinkInProgress, childWalletAddress]);
+
+  const handleLink = async () => {
     if (!parentWalletAddress) {
       console.error("Parent wallet address not set");
       throw new Error("Parent wallet address not set");
@@ -125,7 +157,15 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
-    setIsLinkInProgress(true);
+    if (linkedWallets.includes(childWalletAddress.toLocaleLowerCase())) {
+      setIsLinkInProgress(false);
+      toast({
+        title: "Wallet already linked",
+        description: "The connected wallet is already linked.",
+        variant: "normal",
+      });
+      return;
+    }
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
     const finalChildWalletMessage =
@@ -137,11 +177,17 @@ export const Homepage = () => {
         finalChildWalletMessage
       );
 
+      if (!childSig) {
+        console.error("Could not get signature from wallet to be linked");
+        throw new Error("Could not get signature from wallet to be linked");
+      }
+
       const response = await api.linkWallet({
-        chainId: "137",
+        signatureChainId: "137",
         parentWalletAddress,
         parentWalletMessage: finalParentWalletMessage,
         parentWalletSignature: parentSig,
+        linkedWalletAddress: childWalletAddress,
         linkedWalletMessage: finalChildWalletMessage,
         linkedWalletSignature: childSig,
       });
@@ -152,6 +198,11 @@ export const Homepage = () => {
           childWalletAddress.toLocaleLowerCase(),
         ]);
       }
+      toast({
+        title: "Linking successful",
+        description: "The wallet has been linked successfully.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
     } finally {
@@ -159,9 +210,28 @@ export const Homepage = () => {
     }
   };
 
-  const [isUnlinkInProgress, setIsUnlinkInProgress] = useState(false);
+  const [walletToUnlink, setWalletToUnlink] = useState<string | undefined>(
+    undefined
+  );
 
-  const handleOnUnlinkClick = async () => {
+  useEffect(() => {
+    if (walletToUnlink && childWalletAddress) {
+      if (walletToUnlink === childWalletAddress.toLocaleLowerCase()) {
+        handleUnlink(walletToUnlink);
+      } else {
+        const wallet = walletToUnlink;
+        handleDisconnect().then(() => {
+          setOpenConnectModal(true);
+          // need to set again here because it gets reset by the connect modal closing
+          setWalletToUnlink(wallet);
+        });
+      }
+    } else if (walletToUnlink) {
+      setOpenConnectModal(true);
+    }
+  }, [walletToUnlink, childWalletAddress]);
+
+  const handleUnlink = async (linkedWallet: string) => {
     if (!parentWalletAddress) {
       console.error("Parent wallet address not set.");
       throw new Error("Parent wallet address not set");
@@ -170,8 +240,6 @@ export const Homepage = () => {
       console.error("Child wallet address not set.");
       throw new Error("Child wallet address not set");
     }
-
-    setIsUnlinkInProgress(true);
 
     const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
     const finalChildWalletMessage =
@@ -184,10 +252,11 @@ export const Homepage = () => {
       );
 
       const response = await api.removeLinkedWallet({
-        chainId: "137",
+        signatureChainId: "137",
         parentWalletAddress,
         parentWalletMessage: finalParentWalletMessage,
         parentWalletSignature: parentSig,
+        linkedWalletAddress: childWalletAddress,
         linkedWalletMessage: finalChildWalletMessage,
         linkedWalletSignature: childSig,
       });
@@ -199,20 +268,27 @@ export const Homepage = () => {
 
         setLinkedWallets([...filtered]);
       }
+      toast({
+        title: "Unlinking successful",
+        description: "The wallet has been unlinked successfully.",
+        variant: "success",
+      });
     } catch (error) {
       console.error(error);
     } finally {
-      setIsUnlinkInProgress(false);
+      setWalletToUnlink(undefined);
     }
   };
 
   const handleOnParentWalletDisconnectClick = async () => {
+    setWalletToUnlink(undefined);
+    setIsLinkInProgress(false);
     setParentWalletAddress(undefined);
     setLinkedWallets([]);
     await sequenceWaas.dropSession();
   };
 
-  const handleOnDisconnectClick = async () => {
+  const handleDisconnect = async () => {
     return new Promise<void>((resolve) => {
       setChildWalletAddress(undefined);
       disconnect(undefined, {
@@ -245,7 +321,7 @@ export const Homepage = () => {
             <Box padding="4">
               <Box marginBottom="4">
                 <Text variant="large" color="white">
-                  Connected Wallets
+                  Parent Wallet
                 </Text>
               </Box>
 
@@ -287,68 +363,151 @@ export const Homepage = () => {
                 />
               </Card>
 
-              {childWalletAddress && (
-                <Connected
-                  address={childWalletAddress}
-                  isLinked={linkedWallets.includes(
-                    childWalletAddress.toLocaleLowerCase()
-                  )}
-                  isLinkInProgress={isLinkInProgress}
-                  isUnlinkInProgress={isUnlinkInProgress}
-                  onLinkClick={handleOnLinkClick}
-                  onUnlinkClick={handleOnUnlinkClick}
-                  onDisconnectClick={handleOnDisconnectClick}
-                />
-              )}
-
-              <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
-                <Button
-                  onClick={async () => {
-                    if (childWalletAddress) {
-                      await handleOnDisconnectClick();
-                    }
-                    setOpenConnectModal(true);
-                  }}
-                  variant="feature"
-                  label={
-                    childWalletAddress
-                      ? "Connect another wallet"
-                      : "Connect external wallet to link"
-                  }
-                />
-              </Box>
-
               {linkedWallets.length > 0 && (
                 <Box marginTop="4">
                   <Box marginBottom="4">
                     <Text variant="large" color="white">
-                      All linked wallets
+                      Linked wallets
                     </Text>
                   </Box>
                   <Box flexDirection="column" gap="3">
                     {linkedWallets.map((wallet, index) => (
                       <Card key={index} padding="4">
-                        <Box
-                          flexDirection="row"
-                          alignItems="center"
-                          justifyContent="space-between"
-                        >
-                          <Text color="text100" fontSize="medium">
-                            {isMobile ? truncateAddress(wallet) : wallet}
-                          </Text>
-                          <ClickToCopy textToCopy={wallet} />
+                        <Box flexDirection="column" gap="2">
+                          <Box
+                            flexDirection="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                          >
+                            <Text color="text100" fontSize="medium">
+                              {isMobile ? truncateAddress(wallet) : wallet}
+                            </Text>
+                            <ClickToCopy textToCopy={wallet} />
+                          </Box>
+                          <Box gap="2" alignItems="center">
+                            {childWalletAddress?.toLocaleLowerCase() ===
+                              wallet && (
+                              <Text color="positive" fontWeight="bold">
+                                Connected
+                              </Text>
+                            )}
+                            <Button
+                              shape="square"
+                              label={
+                                childWalletAddress?.toLocaleLowerCase() ===
+                                wallet
+                                  ? "Unlink"
+                                  : "Connect and unlink"
+                              }
+                              onClick={async () => {
+                                if (walletToUnlink) {
+                                  setWalletToUnlink(undefined);
+                                  await handleDisconnect();
+                                }
+                                setWalletToUnlink(wallet);
+                              }}
+                            />
+                          </Box>
                         </Box>
                       </Card>
                     ))}
                   </Box>
                 </Box>
               )}
+
+              <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
+                <Button
+                  onClick={async () => {
+                    setWalletToUnlink(undefined);
+                    if (childWalletAddress) {
+                      await handleDisconnect();
+                    }
+                    setIsLinkInProgress(true);
+                    setOpenConnectModal(true);
+                  }}
+                  variant="feature"
+                  label={
+                    linkedWallets.length === 0
+                      ? "Link a wallet"
+                      : "Link another wallet"
+                  }
+                />
+              </Box>
             </Box>
           </>
         ) : (
           <ParentWalletLogin setParentWalletAddress={setParentWalletAddress} />
         )}
       </Box>
+
+      {(isLinkInProgress || walletToUnlink) && childWalletAddress && (
+        <Modal size="small" isDismissible={false}>
+          <Box
+            flexDirection="column"
+            gap="4"
+            alignItems="center"
+            justifyContent="center"
+            paddingY="10"
+            paddingX="8"
+          >
+            <Spinner size="lg" />
+            <Text variant="large" color="text100" fontWeight="bold">
+              {isLinkInProgress ? "Linking" : "Unlinking"}
+            </Text>
+            {isLinkInProgress && (
+              <Text variant="normal" color="text80" textAlign="center">
+                Connect your wallet and approve the signature <br />
+                request to link.
+              </Text>
+            )}
+
+            {walletToUnlink && (
+              <Text
+                variant="normal"
+                color="text80"
+                textAlign="center"
+                lineHeight="6"
+              >
+                {walletToUnlink === childWalletAddress.toLocaleLowerCase()
+                  ? "Approve "
+                  : "Connect your wallet and approve "}
+                the signature request to unlink wallet <br />
+                <Text color="text100" fontWeight="bold">
+                  {truncateAddress(walletToUnlink ?? "")}
+                </Text>
+              </Text>
+            )}
+          </Box>
+        </Modal>
+      )}
+
+      {walletToUnlink && !childWalletAddress && openConnectModalState && (
+        <Card
+          flexDirection="column"
+          gap="4"
+          alignItems="center"
+          justifyContent="center"
+          paddingY="10"
+          paddingX="8"
+          position="absolute"
+          zIndex="50"
+          left="0"
+          style={isMobile ? { top: 0 } : { bottom: 0 }}
+        >
+          <Spinner size="lg" />
+          <Text variant="normal" color="text80">
+            Waiting connection to wallet
+          </Text>
+
+          <Text color="text100" fontWeight="bold">
+            {isMobile ? truncateAddress(walletToUnlink ?? "") : walletToUnlink}
+          </Text>
+
+          <Text variant="normal" color="text80">
+            to unlink
+          </Text>
+        </Card>
+      )}
     </main>
   );
 };

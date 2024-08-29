@@ -1,6 +1,6 @@
 import "@0xsequence/design-system/styles.css";
 
-import { ThemeProvider } from "@0xsequence/design-system";
+import { ThemeProvider, ToastProvider } from "@0xsequence/design-system";
 import { KitProvider } from "@0xsequence/kit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
@@ -21,7 +21,9 @@ export const App = () => {
             <KitCheckoutProvider>
               <div id="app">
                 <ThemeProvider root="#app" scope="app" theme="dark">
-                  <Homepage />
+                  <ToastProvider>
+                    <Homepage />
+                  </ToastProvider>
                 </ThemeProvider>
               </div>
             </KitCheckoutProvider>
