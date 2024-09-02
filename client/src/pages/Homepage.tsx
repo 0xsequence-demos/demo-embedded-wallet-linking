@@ -123,9 +123,16 @@ export const Homepage = () => {
 
     let childSig: string;
     try {
-      childSig = (await signMessageAsync({
+      const response = await signMessageAsync({
         message: childMessage,
-      })) as string;
+      });
+      // @ts-ignore
+      if (response.result) {
+        // @ts-ignore
+        childSig = response.result as string;
+      } else {
+        childSig = response;
+      }
     } catch (error) {
       toast({
         title: "Request rejected",
