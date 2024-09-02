@@ -166,12 +166,6 @@ export const Homepage = () => {
       childMessage = "Unlink from " + childWalletMessage + parentWalletAddress;
     }
 
-    const parentSigRes = await sequenceWaas.signMessage({
-      message: parentMessage,
-    });
-
-    const parentSig = parentSigRes.data.signature;
-
     let childSig: string;
     try {
       const response = await signMessageAsync({
@@ -193,6 +187,12 @@ export const Homepage = () => {
       });
       throw new Error("Could not get signature from wallet to be linked");
     }
+
+    const parentSigRes = await sequenceWaas.signMessage({
+      message: parentMessage,
+    });
+
+    const parentSig = parentSigRes.data.signature;
 
     return { parentMessage, childMessage, parentSig, childSig };
   };
