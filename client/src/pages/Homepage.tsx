@@ -33,6 +33,13 @@ import { Deferred } from "../utils/promise";
 
 const api = new API("https://dev-api.sequence.app", fetch);
 
+type GetSignatureResult = {
+  parentMessage: string;
+  childMessage: string;
+  parentSig: string;
+  childSig: string;
+};
+
 export const sequenceWaas = new SequenceWaaS({
   network: "polygon",
   projectAccessKey: projectAccessKey,
@@ -67,32 +74,23 @@ export const Homepage = () => {
   >(undefined);
 
   // Only used for sequence universal wallet
-  const [askForSignature, setAskForSignature] = useState(false);
+  const [askForSignature, setAskForSignature] = useState<
+    "linking" | "unlinking" | undefined
+  >(undefined);
   const [askSignatureResult, setAskSignatureResult] = useState<
-    | {
-        parentSig: string;
-        childSig: string;
-      }
-    | undefined
+    GetSignatureResult | undefined
   >();
 
-  const deferredPromiseRef = useRef<Deferred<{
-    parentSig: string;
-    childSig: string;
-  }> | null>(null);
+  const deferredPromiseRef = useRef<Deferred<GetSignatureResult> | null>(null);
 
-  const askUserForSignature = async (): Promise<{
-    parentSig: string;
-    childSig: string;
-  }> => {
-    const deferred = new Deferred<{
-      parentSig: string;
-      childSig: string;
-    }>();
+  const askUserForSignature = async (
+    messageFor: "linking" | "unlinking"
+  ): Promise<GetSignatureResult> => {
+    const deferred = new Deferred<GetSignatureResult>();
 
     deferredPromiseRef.current = deferred;
 
-    setAskForSignature(true);
+    setAskForSignature(messageFor);
 
     return deferred.promise;
   };
@@ -101,7 +99,7 @@ export const Homepage = () => {
     if (askSignatureResult) {
       deferredPromiseRef.current?.resolve(askSignatureResult);
       setAskSignatureResult(undefined);
-      setAskForSignature(false);
+      setAskForSignature(undefined);
       deferredPromiseRef.current = null;
     }
   }, [askSignatureResult]);
@@ -157,12 +155,17 @@ export const Homepage = () => {
   };
 
   const getSignatures = async (
-    parentMessage: string,
-    childMessage: string
-  ): Promise<{
-    parentSig: string;
-    childSig: string;
-  }> => {
+    messageFor: "linking" | "unlinking"
+  ): Promise<GetSignatureResult> => {
+    const parentMessage = parentWalletMessage + childWalletAddress;
+    let childMessage: string;
+
+    if (messageFor === "linking") {
+      childMessage = "Link to " + childWalletMessage + parentWalletAddress;
+    } else {
+      childMessage = "Unlink from " + childWalletMessage + parentWalletAddress;
+    }
+
     const parentSigRes = await sequenceWaas.signMessage({
       message: parentMessage,
     });
@@ -185,13 +188,13 @@ export const Homepage = () => {
       toast({
         title: "Request rejected",
         description:
-          "Please approve signature the request in your wallet to continue.",
+          "Please confirm signature the request in your wallet to continue.",
         variant: "error",
       });
       throw new Error("Could not get signature from wallet to be linked");
     }
 
-    return { parentSig, childSig };
+    return { parentMessage, childMessage, parentSig, childSig };
   };
 
   const [isLinkInProgress, setIsLinkInProgress] = useState(false);
@@ -222,42 +225,32 @@ export const Homepage = () => {
       return;
     }
 
-    const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage =
-      "Link to " + childWalletMessage + parentWalletAddress;
-
     const isSequenceUniversalWallet =
       connections[0]?.connector.id === "sequence";
 
     try {
-      let parentSig: string;
-      let childSig: string;
+      let getSigResult: GetSignatureResult;
 
       if (isSequenceUniversalWallet) {
-        const result = await askUserForSignature();
-        parentSig = result.parentSig;
-        childSig = result.childSig;
+        getSigResult = await askUserForSignature("linking");
       } else {
-        const result = await getSignatures(
-          finalParentWalletMessage,
-          finalChildWalletMessage
-        );
-        parentSig = result.parentSig;
-        childSig = result.childSig;
+        getSigResult = await getSignatures("linking");
       }
 
-      if (!childSig) {
+      if (!getSigResult) {
         console.error("Could not get signature from wallet to be linked");
         throw new Error("Could not get signature from wallet to be linked");
       }
 
+      const { parentMessage, childMessage, parentSig, childSig } = getSigResult;
+
       const response = await api.linkWallet({
         signatureChainId: "137",
         parentWalletAddress,
-        parentWalletMessage: finalParentWalletMessage,
+        parentWalletMessage: parentMessage,
         parentWalletSignature: parentSig,
         linkedWalletAddress: childWalletAddress,
-        linkedWalletMessage: finalChildWalletMessage,
+        linkedWalletMessage: childMessage,
         linkedWalletSignature: childSig,
       });
 
@@ -286,7 +279,7 @@ export const Homepage = () => {
   useEffect(() => {
     if (walletToUnlink && childWalletAddress) {
       if (walletToUnlink === childWalletAddress.toLocaleLowerCase()) {
-        handleUnlink(walletToUnlink);
+        handleUnlink();
       } else {
         const wallet = walletToUnlink;
         handleDisconnect().then(() => {
@@ -300,7 +293,7 @@ export const Homepage = () => {
     }
   }, [walletToUnlink, childWalletAddress]);
 
-  const handleUnlink = async (linkedWallet: string) => {
+  const handleUnlink = async () => {
     if (!parentWalletAddress) {
       console.error("Parent wallet address not set.");
       throw new Error("Parent wallet address not set");
@@ -310,23 +303,26 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
-    const finalParentWalletMessage = parentWalletMessage + childWalletAddress;
-    const finalChildWalletMessage =
-      "Unlink from " + childWalletMessage + parentWalletAddress;
+    const isSequenceUniversalWallet =
+      connections[0]?.connector.id === "sequence";
 
     try {
-      const { parentSig, childSig } = await getSignatures(
-        finalParentWalletMessage,
-        finalChildWalletMessage
-      );
+      let getSigResult: GetSignatureResult;
+
+      if (isSequenceUniversalWallet) {
+        getSigResult = await askUserForSignature("unlinking");
+      } else {
+        getSigResult = await getSignatures("unlinking");
+      }
+      const { parentMessage, childMessage, parentSig, childSig } = getSigResult;
 
       const response = await api.removeLinkedWallet({
         signatureChainId: "137",
         parentWalletAddress,
-        parentWalletMessage: finalParentWalletMessage,
+        parentWalletMessage: parentMessage,
         parentWalletSignature: parentSig,
         linkedWalletAddress: childWalletAddress,
-        linkedWalletMessage: finalChildWalletMessage,
+        linkedWalletMessage: childMessage,
         linkedWalletSignature: childSig,
       });
 
@@ -525,7 +521,7 @@ export const Homepage = () => {
             </Text>
             {isLinkInProgress && !askForSignature && (
               <Text variant="normal" color="text80" textAlign="center">
-                Connect your wallet and approve the signature <br />
+                Connect your wallet and confirm the signature <br />
                 request to link.
               </Text>
             )}
@@ -539,35 +535,40 @@ export const Homepage = () => {
                   label="Confirm signature request"
                   variant="primary"
                   onClick={async () => {
-                    const finalParentWalletMessage =
-                      parentWalletMessage + childWalletAddress;
-                    const finalChildWalletMessage =
-                      "Link to " + childWalletMessage + parentWalletAddress;
-                    const { parentSig, childSig } = await getSignatures(
-                      finalParentWalletMessage,
-                      finalChildWalletMessage
-                    );
-                    setAskSignatureResult({ parentSig, childSig });
+                    const sigResult = await getSignatures("linking");
+                    setAskSignatureResult(sigResult);
                   }}
                 />
               </>
             )}
 
             {walletToUnlink && (
-              <Text
-                variant="normal"
-                color="text80"
-                textAlign="center"
-                lineHeight="6"
-              >
-                {walletToUnlink === childWalletAddress.toLocaleLowerCase()
-                  ? "Approve "
-                  : "Connect your wallet and approve "}
-                the signature request to unlink wallet <br />
-                <Text color="text100" fontWeight="bold">
-                  {truncateAddress(walletToUnlink ?? "")}
+              <>
+                <Text
+                  variant="normal"
+                  color="text80"
+                  textAlign="center"
+                  lineHeight="6"
+                >
+                  {walletToUnlink === childWalletAddress.toLocaleLowerCase()
+                    ? "Confirm "
+                    : "Connect your wallet and confirm "}
+                  the signature request to unlink wallet <br />
+                  <Text color="text100" fontWeight="bold">
+                    {truncateAddress(walletToUnlink ?? "")}
+                  </Text>
                 </Text>
-              </Text>
+                {askForSignature && (
+                  <Button
+                    label="Confirm signature request"
+                    variant="primary"
+                    onClick={async () => {
+                      const sigResult = await getSignatures("linking");
+                      setAskSignatureResult(sigResult);
+                    }}
+                  />
+                )}
+              </>
             )}
           </Box>
         </Modal>
