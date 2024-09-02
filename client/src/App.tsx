@@ -21,7 +21,7 @@ export const App = () => {
             <KitCheckoutProvider>
               <div id="app">
                 <ThemeProvider root="#app" scope="app" theme="dark">
-                  <ToastProvider>
+                  <ToastProvider duration={2500}>
                     <Homepage />
                   </ToastProvider>
                 </ThemeProvider>
