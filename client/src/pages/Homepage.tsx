@@ -563,7 +563,7 @@ export const Homepage = () => {
                     label="Confirm signature request"
                     variant="primary"
                     onClick={async () => {
-                      const sigResult = await getSignatures("linking");
+                      const sigResult = await getSignatures("unlinking");
                       setAskSignatureResult(sigResult);
                     }}
                   />
