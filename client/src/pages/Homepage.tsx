@@ -168,6 +168,9 @@ export const Homepage = () => {
 
     let childSig: string;
     try {
+      // adding a small delay to make sure the wallet is connected
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const response = await signMessageAsync({
         message: childMessage,
       });
