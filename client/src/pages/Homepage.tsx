@@ -106,9 +106,14 @@ export const Homepage = () => {
 
   const checkAccounts = async () => {
     try {
-      const address = await sequenceWaas.getAddress();
-      if (address) {
-        setParentWalletAddress(address);
+      const isSignedIn = await sequenceWaas.isSignedIn();
+      if (isSignedIn) {
+        const address = await sequenceWaas.getAddress();
+        if (address) {
+          setParentWalletAddress(address);
+        }
+      } else {
+        setParentWalletAddress(undefined);
       }
     } catch (error) {
       console.error(error);
