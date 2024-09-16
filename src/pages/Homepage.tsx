@@ -60,6 +60,8 @@ export const Homepage = () => {
   const { address: kitWalletAddress } = useAccount();
   const { signMessageAsync } = useSignMessage();
 
+  const [isFetchingLinkedWallets, setIsFetchingLinkedWallets] =
+    useState<boolean>(false);
   const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>([]);
 
   const parentWalletMessage = "child wallet with address ";
@@ -141,6 +143,7 @@ export const Homepage = () => {
   }, [kitWalletAddress]);
 
   const getLinkedWallets = async () => {
+    setIsFetchingLinkedWallets(true);
     const message = "parent wallet with address " + parentWalletAddress;
     const signature = await sequenceWaas.signMessage({
       message: message,
@@ -157,6 +160,7 @@ export const Homepage = () => {
     });
 
     setLinkedWallets(response.linkedWallets);
+    setIsFetchingLinkedWallets(false);
   };
 
   const getSignatures = async (
@@ -382,7 +386,9 @@ export const Homepage = () => {
         alignItems="center"
         justifyContent="center"
         gap="5"
-        height="vh"
+        minHeight="vh"
+        marginTop="8"
+        paddingX="4"
       >
         <Image
           src={sequenceIconSrc}
@@ -394,7 +400,7 @@ export const Homepage = () => {
 
         {parentWalletAddress ? (
           <>
-            <Box padding="4">
+            <Box paddingY="4">
               <Box marginBottom="4">
                 <Text variant="large" color="white">
                   Parent Wallet
@@ -439,61 +445,70 @@ export const Homepage = () => {
                 />
               </Card>
 
-              {linkedWallets.length > 0 && (
-                <Box marginTop="4">
-                  <Box marginBottom="4">
-                    <Text variant="large" color="white">
-                      Linked wallets
-                    </Text>
-                  </Box>
-                  <Box flexDirection="column" gap="3">
-                    {linkedWallets.map((wallet, index) => (
-                      <Card key={index} padding="4">
-                        <Box flexDirection="column" gap="2">
-                          <Box
-                            flexDirection="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                          >
-                            <Text color="text100" fontSize="medium">
-                              {isMobile
-                                ? truncateAddress(wallet.linkedWalletAddress)
-                                : wallet.linkedWalletAddress}
-                            </Text>
-                            <ClickToCopy
-                              textToCopy={wallet.linkedWalletAddress}
-                            />
-                          </Box>
-                          <Box gap="2" alignItems="center">
-                            {childWalletAddress?.toLocaleLowerCase() ===
-                              wallet.linkedWalletAddress && (
-                              <Text color="positive" fontWeight="bold">
-                                Connected
-                              </Text>
-                            )}
-                            <Button
-                              shape="square"
-                              label={
-                                childWalletAddress?.toLocaleLowerCase() ===
-                                wallet.linkedWalletAddress
-                                  ? "Unlink"
-                                  : "Connect and unlink"
-                              }
-                              onClick={async () => {
-                                if (walletToUnlink) {
-                                  setWalletToUnlink(undefined);
-                                  await handleDisconnect();
-                                }
-                                setWalletToUnlink(wallet.linkedWalletAddress);
-                              }}
-                            />
-                          </Box>
-                        </Box>
-                      </Card>
-                    ))}
-                  </Box>
+              <Box marginTop="4">
+                <Box marginBottom="4">
+                  <Text variant="large" color="white">
+                    Linked wallets
+                  </Text>
                 </Box>
-              )}
+
+                <Box flexDirection="column" gap="3">
+                  {!isFetchingLinkedWallets && linkedWallets.length === 0 && (
+                    <Text variant="normal" color="text80">
+                      No linked wallets
+                    </Text>
+                  )}
+                  {linkedWallets.map((wallet, index) => (
+                    <Card key={index} padding="4">
+                      <Box flexDirection="column" gap="2">
+                        <Box
+                          flexDirection="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
+                          <Text color="text100" fontSize="medium">
+                            {isMobile
+                              ? truncateAddress(wallet.linkedWalletAddress)
+                              : wallet.linkedWalletAddress}
+                          </Text>
+                          <ClickToCopy
+                            textToCopy={wallet.linkedWalletAddress}
+                          />
+                        </Box>
+                        <Box gap="2" alignItems="center">
+                          {childWalletAddress?.toLocaleLowerCase() ===
+                            wallet.linkedWalletAddress && (
+                            <Text color="positive" fontWeight="bold">
+                              Connected
+                            </Text>
+                          )}
+                          <Button
+                            shape="square"
+                            label={
+                              childWalletAddress?.toLocaleLowerCase() ===
+                              wallet.linkedWalletAddress
+                                ? "Unlink"
+                                : "Connect and unlink"
+                            }
+                            onClick={async () => {
+                              if (walletToUnlink) {
+                                setWalletToUnlink(undefined);
+                                await handleDisconnect();
+                              }
+                              setWalletToUnlink(wallet.linkedWalletAddress);
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Card>
+                  ))}
+                  {isFetchingLinkedWallets && (
+                    <Box margin="4" alignItems="center" justifyContent="center">
+                      <Spinner size="lg" />
+                    </Box>
+                  )}
+                </Box>
+              </Box>
 
               <Box marginX="auto" gap="2" justifyContent="center" marginY="6">
                 <Button
