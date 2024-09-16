@@ -26,7 +26,7 @@ import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
 import { projectAccessKey, waasConfigKey } from "../config";
 
-import { API } from "../api/api.gen";
+import { API, LinkedWallet } from "../api/api.gen";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 import { Deferred } from "../utils/promise";
@@ -60,7 +60,7 @@ export const Homepage = () => {
   const { address: kitWalletAddress } = useAccount();
   const { signMessageAsync } = useSignMessage();
 
-  const [linkedWallets, setLinkedWallets] = useState<string[]>([]);
+  const [linkedWallets, setLinkedWallets] = useState<LinkedWallet[]>([]);
 
   const parentWalletMessage = "child wallet with address ";
   const childWalletMessage = "parent wallet with address ";
@@ -223,7 +223,12 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
-    if (linkedWallets.includes(childWalletAddress.toLocaleLowerCase())) {
+    if (
+      linkedWallets.some(
+        (linked) =>
+          linked.linkedWalletAddress === childWalletAddress.toLocaleLowerCase()
+      )
+    ) {
       setIsLinkInProgress(false);
       toast({
         title: "Wallet already linked",
@@ -262,12 +267,8 @@ export const Homepage = () => {
         linkedWalletSignature: childSig,
       });
 
-      if (response.status) {
-        setLinkedWallets([
-          ...linkedWallets,
-          childWalletAddress.toLocaleLowerCase(),
-        ]);
-      }
+      await getLinkedWallets();
+
       toast({
         title: "Linking successful",
         description: "The wallet has been linked successfully.",
@@ -336,7 +337,9 @@ export const Homepage = () => {
 
       if (response.status) {
         const filtered = linkedWallets.filter(
-          (wallet) => wallet !== childWalletAddress.toLocaleLowerCase()
+          (linked) =>
+            linked.linkedWalletAddress !==
+            childWalletAddress.toLocaleLowerCase()
         );
 
         setLinkedWallets([...filtered]);
@@ -453,13 +456,17 @@ export const Homepage = () => {
                             justifyContent="space-between"
                           >
                             <Text color="text100" fontSize="medium">
-                              {isMobile ? truncateAddress(wallet) : wallet}
+                              {isMobile
+                                ? truncateAddress(wallet.linkedWalletAddress)
+                                : wallet.linkedWalletAddress}
                             </Text>
-                            <ClickToCopy textToCopy={wallet} />
+                            <ClickToCopy
+                              textToCopy={wallet.linkedWalletAddress}
+                            />
                           </Box>
                           <Box gap="2" alignItems="center">
                             {childWalletAddress?.toLocaleLowerCase() ===
-                              wallet && (
+                              wallet.linkedWalletAddress && (
                               <Text color="positive" fontWeight="bold">
                                 Connected
                               </Text>
@@ -468,7 +475,7 @@ export const Homepage = () => {
                               shape="square"
                               label={
                                 childWalletAddress?.toLocaleLowerCase() ===
-                                wallet
+                                wallet.linkedWalletAddress
                                   ? "Unlink"
                                   : "Connect and unlink"
                               }
@@ -477,7 +484,7 @@ export const Homepage = () => {
                                   setWalletToUnlink(undefined);
                                   await handleDisconnect();
                                 }
-                                setWalletToUnlink(wallet);
+                                setWalletToUnlink(wallet.linkedWalletAddress);
                               }}
                             />
                           </Box>
