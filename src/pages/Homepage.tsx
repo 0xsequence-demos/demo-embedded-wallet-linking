@@ -245,6 +245,8 @@ export const Homepage = () => {
     const isSequenceUniversalWallet =
       connections[0]?.connector.id === "sequence";
 
+    const connectorName = connections[0]?.connector.name;
+
     try {
       let getSigResult: GetSignatureResult;
 
@@ -261,8 +263,9 @@ export const Homepage = () => {
 
       const { parentMessage, childMessage, parentSig, childSig } = getSigResult;
 
-      const response = await api.linkWallet({
+      await api.linkWallet({
         signatureChainId: "137",
+        linkedWalletType: connectorName,
         parentWalletAddress,
         parentWalletMessage: parentMessage,
         parentWalletSignature: parentSig,
@@ -474,6 +477,14 @@ export const Homepage = () => {
                           <ClickToCopy
                             textToCopy={wallet.linkedWalletAddress}
                           />
+                        </Box>
+                        <Box marginBottom="1">
+                          <Text color="text50" fontSize="medium">
+                            Wallet type:
+                          </Text>{" "}
+                          <Text color="text80" fontSize="medium">
+                            {wallet.walletType ?? "Unknown"}
+                          </Text>
                         </Box>
                         <Box gap="2" alignItems="center">
                           {childWalletAddress?.toLocaleLowerCase() ===
