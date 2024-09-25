@@ -21,7 +21,7 @@ export const waasConfigKey =import.meta.env.VITE_WAAS_CONFIG_KEY
 export const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const defaultChainId = ChainId.POLYGON;
-const walletConnectProjectId = import.meta.env.WALLET_CONNECT_PROJECT_ID;
+const walletConnectProjectId = import.meta.env.VITE_WALLET_CONNECT_ID;
 const appName = "Link Wallet Demo";
 
 const connectors = getKitConnectWallets(projectAccessKey, [
