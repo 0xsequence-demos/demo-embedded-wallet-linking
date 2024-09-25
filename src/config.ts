@@ -16,14 +16,12 @@ const transports = chains.reduce<Record<number, Transport>>((acc, chain) => {
   return acc;
 }, {});
 
-export const projectAccessKey = "AQAAAAAAAEGvyZiWA9FMslYeG_yayXaHnSI";
-export const waasConfigKey =
-  "eyJwcm9qZWN0SWQiOjE2ODE1LCJlbWFpbFJlZ2lvbiI6ImNhLWNlbnRyYWwtMSIsImVtYWlsQ2xpZW50SWQiOiI2N2V2NXVvc3ZxMzVmcGI2OXI3NnJoYnVoIiwicnBjU2VydmVyIjoiaHR0cHM6Ly93YWFzLnNlcXVlbmNlLmFwcCJ9";
-export const googleClientId =
-  "970987756660-35a6tc48hvi8cev9cnknp0iugv9poa23.apps.googleusercontent.com";
+export const projectAccessKey = import.meta.env.VITE_PROJECT_ACCESS_KEY;
+export const waasConfigKey =import.meta.env.VITE_WAAS_CONFIG_KEY
+export const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
 const defaultChainId = ChainId.POLYGON;
-const walletConnectProjectId = "c65a6cb1aa83c4e24500130f23a437d8";
+const walletConnectProjectId = import.meta.env.WALLET_CONNECT_PROJECT_ID;
 const appName = "Link Wallet Demo";
 
 const connectors = getKitConnectWallets(projectAccessKey, [

@@ -6,7 +6,8 @@
     "dev": "vite --port 4444",
     "build": "tsc && vite build",
     "serve": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "postinstall": "cp .env.example .env"
   },
   "dependencies": {
     "ethers": "6.13.2",
