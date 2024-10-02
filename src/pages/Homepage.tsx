@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SequenceAPIClient } from "@0xsequence/api";
+import { LinkedWallet, SequenceAPIClient } from "@0xsequence/api";
 import {
   Box,
   Button,
@@ -26,8 +26,6 @@ import { ClickToCopy } from "../components/ClickToCopy";
 import { ParentWalletLogin } from "../components/ParentWalletLogin";
 
 import { projectAccessKey, waasConfigKey } from "../config";
-
-import { API, LinkedWallet } from "../api/api.gen";
 
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 import { Deferred } from "../utils/promise";
