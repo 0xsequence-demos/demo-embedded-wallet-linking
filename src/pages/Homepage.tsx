@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SequenceAPIClient } from "@0xsequence/api";
 import {
   Box,
   Button,
@@ -31,7 +32,7 @@ import { API, LinkedWallet } from "../api/api.gen";
 import sequenceIconSrc from "../asset/sequence-icon.svg";
 import { Deferred } from "../utils/promise";
 
-const api = new API("https://dev-api.sequence.app", fetch);
+const api = new SequenceAPIClient("https://api.sequence.app");
 
 type GetSignatureResult = {
   parentMessage: string;
