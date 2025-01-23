@@ -12,9 +12,9 @@
   "dependencies": {
     "ethers": "6.13.3",
     "@0xsequence/design-system": "1.7.8",
-    "@0xsequence/network": "2.0.11",
-    "@0xsequence/waas": "2.0.11",
-    "@0xsequence/api": "2.0.11",
+    "@0xsequence/network": "2.2.8",
+    "@0xsequence/waas": "2.2.8",
+    "@0xsequence/api": "2.2.8",
     "@react-oauth/google": "^0.12.1",
     "@0xsequence/kit": "4.0.6",
     "@0xsequence/kit-wallet": "4.0.6",
