@@ -328,18 +328,8 @@ export const Homepage = () => {
       throw new Error("Child wallet address not set");
     }
 
-    const isSequenceUniversalWallet =
-      connections[0]?.connector.id === "sequence";
-
     try {
-      let getSigResult: GetSignatureResult;
-
-      if (isSequenceUniversalWallet) {
-        getSigResult = await askUserForSignature("unlinking");
-      } else {
-        getSigResult = await getSignatures("unlinking");
-      }
-      const { parentMessage, parentSig } = getSigResult;
+      const { parentMessage, parentSig } = await getSignatures("unlinking");
 
       const response = await api.removeLinkedWallet({
         signatureChainId: "137",
